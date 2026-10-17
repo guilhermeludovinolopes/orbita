@@ -2,6 +2,8 @@
 dados/
 *.xlsx
 *.csv
+# Script da tabela de correções: contém nomes e anotações pessoais
+scripts/gerar_tabela_correcoes.py
 
 # Segredos
 .env
