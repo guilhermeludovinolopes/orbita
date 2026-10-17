@@ -5,6 +5,7 @@ import {
   Map as Mapa,
   setWorkerUrl,
   type ExpressionSpecification,
+  type GeoJSONSource,
   type LngLat,
   type LngLatBoundsLike,
   type MapGeoJSONFeature,
@@ -26,7 +27,10 @@ const COR = {
   oceano: "#13294B", // Marinho
   naoVisitado: "#D8CFBF", // pastel (em avaliação)
   visitado: "#2E6A4F", // verde (em avaliação)
-  completo: "#C9A34E", // Dourado
+  completo: "#E2B23A", // Dourado mais vivo no mapa, para brilhar (o Dourado da marca é #C9A34E)
+  brilho: "#F6D36B", // halo em volta das áreas completas
+  pelicula: "#000F0C", // Tinta: escurece o que está fora do país em foco
+  foco: "#F5F0E8", // Papel: contorno do país em foco
   divisa: "#3B2418", // Marrom Café
   destaque: "#6B1420", // Bordô
   aguaRasa: "#265492", // mar raso da foto da NASA (o mesmo de scripts/gerar-oceano.mjs)
@@ -217,6 +221,7 @@ export default function Globo() {
       esconderCamada(camada);
       mapa.addSource(camada, { type: "geojson", data: { type: "FeatureCollection", features }, promoteId: "codigo" });
       mapa.addLayer({ id: camada, type: "fill", source: camada, paint: { "fill-color": PREENCHIMENTO } }, "relevo");
+      adicionarBrilho(camada);
       mapa.addLayer({
         id: `${camada}-divisas`,
         type: "line",
@@ -240,8 +245,37 @@ export default function Globo() {
       });
     }
 
+    // Halo dourado desfocado em volta das áreas completas, para o dourado brilhar
+    function adicionarBrilho(camada: Camada) {
+      mapa.addLayer({
+        id: `${camada}-brilho`,
+        type: "line",
+        source: camada,
+        filter: ["==", ["get", "situacao"], "completo"],
+        layout: { "line-join": "round" },
+        paint: { "line-color": COR.brilho, "line-width": 6, "line-blur": 5, "line-opacity": 0.85 },
+      });
+    }
+
+    // Foco: escurece os outros países e o mar, e o país em foco ganha contorno em Papel
+    let contornosPaises: GeoJSON.Feature[] = [];
+    function focar(codigo: string) {
+      const pais = contornosPaises.find((f) => f.properties?.codigo === codigo);
+      if (!pais) return;
+      mapa.setFilter("pelicula", ["!=", ["get", "codigo"], codigo]);
+      mapa.setLayoutProperty("pelicula", "visibility", "visible");
+      mapa.setPaintProperty("mar", "raster-brightness-max", 0.45);
+      (mapa.getSource("foco") as GeoJSONSource).setData(pais);
+    }
+    function desfocar() {
+      if (!mapa.getLayer("pelicula")) return;
+      mapa.setLayoutProperty("pelicula", "visibility", "none");
+      mapa.setPaintProperty("mar", "raster-brightness-max", 1);
+      (mapa.getSource("foco") as GeoJSONSource).setData({ type: "FeatureCollection", features: [] });
+    }
+
     function esconderCamada(camada: Camada) {
-      for (const id of [`${camada}-destaque`, `${camada}-divisas`, camada]) if (mapa.getLayer(id)) mapa.removeLayer(id);
+      for (const id of [`${camada}-destaque`, `${camada}-divisas`, `${camada}-brilho`, camada]) if (mapa.getLayer(id)) mapa.removeLayer(id);
       if (mapa.getSource(camada)) mapa.removeSource(camada);
     }
 
@@ -255,6 +289,7 @@ export default function Globo() {
     }
 
     function mostrarMundo() {
+      desfocar();
       esconderCamada("municipios");
       esconderCamada("estados");
       delete atual.pais;
@@ -273,7 +308,9 @@ export default function Globo() {
         return { ...f, properties: { ...f.properties, situacao: situacao(resumo, f.properties!.total) ?? "" } };
       });
       esconderCamada("municipios");
+      focar(codigo);
       mostrarCamada("estados", estados);
+      mapa.moveLayer("foco"); // contorno do país por cima das divisas dos estados
       Object.assign(atual, { pais: codigo, nomePais: nome });
       delete atual.estado;
       delete atual.nomeEstado;
@@ -357,6 +394,7 @@ export default function Globo() {
         f.properties!.situacao = situacao(resumo, DETALHE_PAISES[codigo]?.totalMunicipios) ?? "";
       }
 
+      contornosPaises = colecao.features;
       mapa.addSource("paises", { type: "geojson", data: colecao, promoteId: "codigo" });
       mapa.addLayer({ id: "paises", type: "fill", source: "paises", paint: { "fill-color": PREENCHIMENTO } });
 
@@ -411,6 +449,26 @@ export default function Globo() {
           "line-width": ["interpolate", ["linear"], ["zoom"], ...NIVEIS.paises.destaque],
           "line-opacity": ["case", ["boolean", ["feature-state", "sobre"], false], 1, 0],
         },
+      });
+
+      adicionarBrilho("paises");
+
+      // Película e contorno do país em foco (vazios até entrar num país)
+      const vazio: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+      mapa.addLayer({
+        id: "pelicula",
+        type: "fill",
+        source: "paises",
+        layout: { visibility: "none" },
+        paint: { "fill-color": COR.pelicula, "fill-opacity": 0.6 },
+      });
+      mapa.addSource("foco", { type: "geojson", data: vazio });
+      mapa.addLayer({
+        id: "foco",
+        type: "line",
+        source: "foco",
+        layout: { "line-join": "round" },
+        paint: { "line-color": COR.foco, "line-width": ["interpolate", ["linear"], ["zoom"], 2, 1.5, 6, 2.5] },
       });
 
       // Destaque do mouse: só a área mais funda sob o cursor ganha o contorno Bordô
