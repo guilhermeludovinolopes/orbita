@@ -18,6 +18,7 @@ const COR = {
   naoVisitado: "#D8CFBF", // pastel (em avaliação)
   visitado: "#2E6A4F", // verde (em avaliação)
   completo: "#C9A34E", // Dourado
+  aguaRasa: "#265492", // mar raso da foto da NASA (o mesmo de scripts/gerar-oceano.mjs)
 };
 
 // Países que cruzam a linha de data (Fiji, Rússia...) vêm com pontos em -180 e +180 no mesmo
@@ -37,6 +38,13 @@ function costurarLinhaDeData(f: GeoJSON.Feature) {
 
 const CODIGO_NUMERICO_REINO_UNIDO = "826";
 const LAT_MAX_MERCATOR = 85.0511287798;
+// Cantos do mundo inteiro em Web Mercator, para as imagens do mar e do relevo
+const CANTOS_MERCATOR: [[number, number], [number, number], [number, number], [number, number]] = [
+  [-180, LAT_MAX_MERCATOR],
+  [180, LAT_MAX_MERCATOR],
+  [180, -LAT_MAX_MERCATOR],
+  [-180, -LAT_MAX_MERCATOR],
+];
 
 // Céu estrelado fixo: pontos com posição e brilho sorteados uma vez por tela
 function desenharEstrelas(tela: HTMLCanvasElement) {
@@ -87,12 +95,7 @@ export default function Globo() {
           mar: {
             type: "image",
             url: "/geo/oceano.jpg",
-            coordinates: [
-              [-180, LAT_MAX_MERCATOR],
-              [180, LAT_MAX_MERCATOR],
-              [180, -LAT_MAX_MERCATOR],
-              [-180, -LAT_MAX_MERCATOR],
-            ],
+            coordinates: CANTOS_MERCATOR,
           },
         },
         layers: [
@@ -155,6 +158,37 @@ export default function Globo() {
         source: "paises",
         paint: { "fill-color": preenchimento },
       });
+
+      // Relevo: sombras e luzes das montanhas por cima das cores (ver scripts/gerar-relevo.mjs)
+      mapa.addSource("relevo", { type: "image", url: "/geo/relevo.png", coordinates: CANTOS_MERCATOR });
+      mapa.addLayer({
+        id: "relevo",
+        type: "raster",
+        source: "relevo",
+        paint: { "raster-fade-duration": 0, "raster-resampling": "linear" },
+      });
+
+      // Lagos e rios na cor do mar raso (ver scripts/gerar-aguas.mjs)
+      mapa.addSource("lagos", { type: "geojson", data: "/geo/lagos.json" });
+      mapa.addLayer({ id: "lagos", type: "fill", source: "lagos", paint: { "fill-color": COR.aguaRasa } });
+      mapa.addSource("rios", { type: "geojson", data: "/geo/rios.json" });
+      mapa.addLayer({
+        id: "rios",
+        type: "line",
+        source: "rios",
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": COR.aguaRasa,
+          // Rios mais importantes (importância baixa) são mais grossos; todos engrossam com o zoom
+          "line-width": [
+            "interpolate", ["linear"], ["zoom"],
+            2, ["max", 0.3, ["-", 1.2, ["*", 0.12, ["get", "importancia"]]]],
+            6, ["max", 0.8, ["-", 2.6, ["*", 0.2, ["get", "importancia"]]]],
+          ],
+          "line-opacity": ["interpolate", ["linear"], ["zoom"], 1.5, 0.5, 3, 1],
+        },
+      });
+
       // Divisas na cor do oceano: separam os países sem desenhar uma borda visível
       mapa.addLayer({
         id: "divisas",

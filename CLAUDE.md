@@ -22,6 +22,7 @@ App web pessoal do Guilherme Lopes (linha **GL Pessoal**, sem fins profissionais
 ## Mapa e cores
 - Globo 3D; clique no país → mapa do país por 2º nível; clique no estado → municípios.
 - Oceano realista: Blue Marble da NASA (domínio público) só com o mar, gerado por `scripts/gerar-oceano.mjs` em `public/geo/oceano.jpg`. Marinho fica por baixo, como reserva.
+- Relevo sombreado da Natural Earth por cima das cores dos países (`scripts/gerar-relevo.mjs`); lagos e rios na cor do mar raso (`scripts/gerar-aguas.mjs`). Sem nuvens e sem dia/noite (decisão do Guilherme).
 - Espaço ao redor do globo: Tinta com estrelas. Atmosfera bem sutil, que some ao aproximar (exceção consciente à regra de evitar gradientes, em avaliação).
 - Não visitado: terra em tom pastel (`#D8CFBF`, em avaliação). Visitado: verde. Completo (visitou absolutamente tudo dentro): dourado.
 - Divisas na cor do oceano, para separar sem desenhar borda.
