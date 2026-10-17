@@ -16,6 +16,7 @@ out/
 build/
 .vercel/
 next-env.d.ts
+public/maplibre/
 *.tsbuildinfo
 
 # Configuração local do Claude Code

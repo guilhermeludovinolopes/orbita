@@ -22,10 +22,17 @@ App web pessoal do Guilherme Lopes (linha **GL Pessoal**, sem fins profissionais
 
 ## Mapa e cores
 - Globo 3D; clique no país → mapa do país por 2º nível; clique no estado → municípios.
-- Não visitado: sem preenchimento e sem borda. Visitado: verde. Completo (visitou absolutamente tudo dentro): dourado.
+- Oceano realista: Blue Marble da NASA (domínio público) só com o mar, gerado por `scripts/gerar-oceano.mjs` em `public/geo/oceano.jpg`. Marinho fica por baixo, como reserva.
+- Relevo sombreado da Natural Earth por cima das cores dos países (`scripts/gerar-relevo.mjs`); lagos e rios na cor do mar raso (`scripts/gerar-aguas.mjs`). Sem nuvens e sem dia/noite (decisão do Guilherme).
+- Espaço ao redor do globo: Tinta com estrelas. Atmosfera bem sutil, que some ao aproximar (exceção consciente à regra de evitar gradientes, em avaliação).
+- Não visitado: terra em tom pastel (`#D8CFBF`, em avaliação). Visitado: verde. Completo (visitou absolutamente tudo dentro): dourado.
+- Divisas em Marrom Café, visíveis sobre todas as cores e o mar. País sob o mouse: contorno em Bordô, mais grosso.
 
 ## Marca (guia GL Pessoal v1)
 - Marinho `#13294B` (principal), Bordô `#6B1420` (destaque), Dourado `#C9A34E` (acento, nunca texto pequeno em fundo claro), Marrom Café `#3B2418`, Papel `#F5F0E8`, Tinta `#000F0C`.
-- Verde novo em avaliação: `#2E6A4F` (ainda não aprovado).
+- Verde novo em avaliação: `#2E6A4F` (ainda não aprovado). Pastel da terra não visitada: `#D8CFBF` (em avaliação).
 - Instrument Sans (600 títulos, 400 texto), IBM Plex Mono para legendas e dados. Ênfase só por peso, nunca itálico.
 - Evitar roxo, rosa e gradientes. Um acento de cor por peça. Símbolo sobre Tinta ou Marinho.
+
+## Ambiente
+- No PowerShell desta máquina, use `npm.cmd` (scripts `.ps1` estão bloqueados).

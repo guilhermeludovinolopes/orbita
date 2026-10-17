@@ -1,34 +1,31 @@
 .tela {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+.topo {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 32px;
-  padding: 48px 16px;
-  text-align: center;
+  gap: 12px;
+  padding: 20px 24px;
 }
 
 .simbolo {
-  width: min(320px, 70vw);
-  height: auto;
+  width: 44px;
+  height: 44px;
   /* O símbolo tem fundo preto: "screen" deixa só o brilho sobre a Tinta */
   mix-blend-mode: screen;
 }
 
 .titulo {
   font-weight: 600;
-  font-size: clamp(40px, 8vw, 64px);
-  letter-spacing: -0.02em;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
 }
 
 .subtitulo {
-  margin-top: 8px;
-  font-size: 20px;
-  opacity: 0.8;
-}
-
-.legenda {
   font-family: var(--fonte-mono), monospace;
   font-size: 12px;
   letter-spacing: 0.12em;
