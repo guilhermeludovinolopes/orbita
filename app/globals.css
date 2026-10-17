@@ -1,0 +1,27 @@
+:root {
+  /* Guia GL Pessoal v1 */
+  --marinho: #13294b;
+  --bordo: #6b1420;
+  --dourado: #c9a34e;
+  --marrom: #3b2418;
+  --papel: #f5f0e8;
+  --tinta: #000f0c;
+  --verde: #2e6a4f; /* em avaliação */
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--tinta);
+  color: var(--papel);
+  font-family: var(--fonte-texto), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
