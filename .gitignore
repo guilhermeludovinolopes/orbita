@@ -15,6 +15,11 @@ node_modules/
 out/
 build/
 .vercel/
+next-env.d.ts
+*.tsbuildinfo
+
+# Configuração local do Claude Code
+.claude/
 
 # Python
 __pycache__/
