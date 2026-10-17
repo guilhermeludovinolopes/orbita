@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { obterSupabase } from "./supabase";
 
 export type Situacao = "visitado" | "completo";
 
@@ -16,7 +16,7 @@ const PERFIL_DO_SITE = "guilherme";
 // Resumo das visitas por país (código do globo: "BR", "GB-ENG"...).
 // "completo" depende do total de municípios de cada país e entra com o mapa por estados.
 export async function carregarResumoPorPais(): Promise<Record<string, ResumoPais>> {
-  const { data, error } = await supabase
+  const { data, error } = await obterSupabase()
     .from("visitas")
     .select("pais_codigo, nivel2_codigo, ano, perfis!inner(usuario)")
     .eq("perfis.usuario", PERFIL_DO_SITE);
