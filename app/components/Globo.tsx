@@ -18,6 +18,8 @@ const COR = {
   naoVisitado: "#D8CFBF", // pastel (em avaliação)
   visitado: "#2E6A4F", // verde (em avaliação)
   completo: "#C9A34E", // Dourado
+  divisa: "#3B2418", // Marrom Café
+  destaque: "#6B1420", // Bordô
   aguaRasa: "#265492", // mar raso da foto da NASA (o mesmo de scripts/gerar-oceano.mjs)
 };
 
@@ -189,21 +191,26 @@ export default function Globo() {
         },
       });
 
-      // Divisas na cor do oceano: separam os países sem desenhar uma borda visível
+      // Divisas em Marrom Café: aparecem sobre o pastel, o verde, o dourado e o mar
       mapa.addLayer({
         id: "divisas",
         type: "line",
         source: "paises",
-        paint: { "line-color": COR.oceano, "line-width": 0.6 },
+        layout: { "line-join": "round" },
+        paint: {
+          "line-color": COR.divisa,
+          "line-width": ["interpolate", ["linear"], ["zoom"], 1, 0.5, 4, 0.9, 7, 1.4],
+        },
       });
-      // Contorno em Papel no país sob o mouse
+      // Contorno em Bordô, mais grosso, no país sob o mouse
       mapa.addLayer({
         id: "destaque",
         type: "line",
         source: "paises",
+        layout: { "line-join": "round" },
         paint: {
-          "line-color": "#F5F0E8",
-          "line-width": 1.6,
+          "line-color": COR.destaque,
+          "line-width": ["interpolate", ["linear"], ["zoom"], 1, 1.8, 4, 2.6, 7, 3.4],
           "line-opacity": ["case", ["boolean", ["feature-state", "sobre"], false], 1, 0],
         },
       });

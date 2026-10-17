@@ -25,7 +25,7 @@ App web pessoal do Guilherme Lopes (linha **GL Pessoal**, sem fins profissionais
 - Relevo sombreado da Natural Earth por cima das cores dos países (`scripts/gerar-relevo.mjs`); lagos e rios na cor do mar raso (`scripts/gerar-aguas.mjs`). Sem nuvens e sem dia/noite (decisão do Guilherme).
 - Espaço ao redor do globo: Tinta com estrelas. Atmosfera bem sutil, que some ao aproximar (exceção consciente à regra de evitar gradientes, em avaliação).
 - Não visitado: terra em tom pastel (`#D8CFBF`, em avaliação). Visitado: verde. Completo (visitou absolutamente tudo dentro): dourado.
-- Divisas na cor do oceano, para separar sem desenhar borda.
+- Divisas em Marrom Café, visíveis sobre todas as cores e o mar. País sob o mouse: contorno em Bordô, mais grosso.
 
 ## Marca (guia GL Pessoal v1)
 - Marinho `#13294B` (principal), Bordô `#6B1420` (destaque), Dourado `#C9A34E` (acento, nunca texto pequeno em fundo claro), Marrom Café `#3B2418`, Papel `#F5F0E8`, Tinta `#000F0C`.
