@@ -36,12 +36,41 @@ function costurarLinhaDeData(f: GeoJSON.Feature) {
 }
 
 const CODIGO_NUMERICO_REINO_UNIDO = "826";
+const LAT_MAX_MERCATOR = 85.0511287798;
+
+// Céu estrelado fixo: pontos com posição e brilho sorteados uma vez por tela
+function desenharEstrelas(tela: HTMLCanvasElement) {
+  const escala = window.devicePixelRatio || 1;
+  tela.width = tela.clientWidth * escala;
+  tela.height = tela.clientHeight * escala;
+  const ctx = tela.getContext("2d");
+  if (!ctx) return;
+  const quantidade = Math.round((tela.clientWidth * tela.clientHeight) / 2500);
+  for (let i = 0; i < quantidade; i++) {
+    const raio = (Math.random() < 0.9 ? 0.5 : 0.9) * escala;
+    ctx.globalAlpha = 0.25 + Math.random() * 0.6;
+    ctx.fillStyle = "#F5F0E8"; // Papel
+    ctx.beginPath();
+    ctx.arc(Math.random() * tela.width, Math.random() * tela.height, raio, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
 
 type PaisSelecionado = { codigo: string; nome: string; situacao: Situacao | null };
 
 export default function Globo() {
   const recipiente = useRef<HTMLDivElement>(null);
+  const ceu = useRef<HTMLCanvasElement>(null);
   const [selecionado, setSelecionado] = useState<PaisSelecionado | null>(null);
+
+  useEffect(() => {
+    const tela = ceu.current;
+    if (!tela) return;
+    desenharEstrelas(tela);
+    const redesenhar = () => desenharEstrelas(tela);
+    window.addEventListener("resize", redesenhar);
+    return () => window.removeEventListener("resize", redesenhar);
+  }, []);
 
   useEffect(() => {
     if (!recipiente.current) return;
@@ -51,9 +80,25 @@ export default function Globo() {
       style: {
         version: 8,
         projection: { type: "globe" },
-        sky: { "atmosphere-blend": 0 },
-        sources: {},
-        layers: [{ id: "oceano", type: "background", paint: { "background-color": COR.oceano } }],
+        // Atmosfera bem sutil, que some ao aproximar
+        sky: { "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 0.35, 4, 0.15, 6, 0] },
+        sources: {
+          // Mar realista: Blue Marble da NASA reprojetada (ver scripts/gerar-oceano.mjs)
+          mar: {
+            type: "image",
+            url: "/geo/oceano.jpg",
+            coordinates: [
+              [-180, LAT_MAX_MERCATOR],
+              [180, LAT_MAX_MERCATOR],
+              [180, -LAT_MAX_MERCATOR],
+              [-180, -LAT_MAX_MERCATOR],
+            ],
+          },
+        },
+        layers: [
+          { id: "oceano", type: "background", paint: { "background-color": COR.oceano } },
+          { id: "mar", type: "raster", source: "mar", paint: { "raster-fade-duration": 0 } },
+        ],
       },
       center: [-30, 10],
       // Telas estreitas (celular) precisam de um globo menor para caber inteiro
@@ -108,10 +153,7 @@ export default function Globo() {
         id: "paises",
         type: "fill",
         source: "paises",
-        paint: {
-          "fill-color": preenchimento,
-          "fill-opacity": ["case", ["boolean", ["feature-state", "sobre"], false], 0.85, 1],
-        },
+        paint: { "fill-color": preenchimento },
       });
       // Divisas na cor do oceano: separam os países sem desenhar uma borda visível
       mapa.addLayer({
@@ -119,6 +161,17 @@ export default function Globo() {
         type: "line",
         source: "paises",
         paint: { "line-color": COR.oceano, "line-width": 0.6 },
+      });
+      // Contorno em Papel no país sob o mouse
+      mapa.addLayer({
+        id: "destaque",
+        type: "line",
+        source: "paises",
+        paint: {
+          "line-color": "#F5F0E8",
+          "line-width": 1.6,
+          "line-opacity": ["case", ["boolean", ["feature-state", "sobre"], false], 1, 0],
+        },
       });
 
       let sobre: string | null = null;
@@ -160,6 +213,7 @@ export default function Globo() {
 
   return (
     <div className={estilos.area}>
+      <canvas ref={ceu} className={estilos.ceu} aria-hidden="true" />
       <div ref={recipiente} className={estilos.mapa} />
 
       <ul className={estilos.legenda}>
