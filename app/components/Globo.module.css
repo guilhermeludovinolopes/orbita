@@ -90,6 +90,45 @@
   opacity: 0.75;
 }
 
+.anos {
+  margin-top: 12px;
+  font-family: var(--fonte-mono), monospace;
+  font-size: 14px;
+  color: var(--dourado);
+}
+
+.trilha {
+  position: absolute;
+  top: 16px;
+  left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.voltar {
+  padding: 8px 14px;
+  background: var(--tinta);
+  color: var(--papel);
+  border: 1px solid rgba(245, 240, 232, 0.25);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.voltar:hover {
+  border-color: var(--papel);
+}
+
+.caminho {
+  font-family: var(--fonte-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
 .nota {
   margin-top: 16px;
   font-size: 14px;
@@ -105,7 +144,15 @@
 
   .legenda {
     left: 16px;
-    top: 16px;
+    top: 64px;
     bottom: auto;
+  }
+
+  .trilha {
+    left: 16px;
+  }
+
+  .caminho {
+    display: none;
   }
 }

@@ -23,12 +23,15 @@ App web pessoal do Guilherme Lopes (linha **GL Pessoal**, sem fins profissionais
 - Códigos oficiais: IBGE (BR), Census/FIPS (US), ISTAT (IT), BFS (CH), INE/DICO (PT), ONS (Inglaterra); 1º nível em ISO 3166-2. Pipeline: `aplicar_respostas.py` → `casar_codigos.py` → `gerar_importacao.py` (o SQL gerado fica em `dados/` e é rodado no SQL Editor).
 
 ## Mapa e cores
-- Globo 3D; clique no país → mapa do país por 2º nível; clique no estado → municípios.
+- Globo 3D; clique no país → mapa do país por 2º nível; clique no estado → municípios. Países com esse detalhe ficam em `lib/detalhe-paises.ts` (por enquanto só o Brasil, com as malhas do IBGE via `scripts/gerar-brasil.mjs`).
+- Dourado: estado completo quando todos os municípios dele foram visitados; país completo quando todos os municípios do país foram. O município visitado é sempre verde.
 - Oceano realista: Blue Marble da NASA (domínio público) só com o mar, gerado por `scripts/gerar-oceano.mjs` em `public/geo/oceano.jpg`. Marinho fica por baixo, como reserva.
 - Relevo sombreado da Natural Earth por cima das cores dos países (`scripts/gerar-relevo.mjs`); lagos e rios na cor do mar raso (`scripts/gerar-aguas.mjs`). Sem nuvens e sem dia/noite (decisão do Guilherme).
 - Espaço ao redor do globo: Tinta com estrelas. Atmosfera bem sutil, que some ao aproximar (exceção consciente à regra de evitar gradientes, em avaliação).
 - Não visitado: terra em tom pastel (`#D8CFBF`, em avaliação). Visitado: verde. Completo (visitou absolutamente tudo dentro): dourado.
 - Divisas em Marrom Café, visíveis sobre todas as cores e o mar. País sob o mouse: contorno em Bordô, mais grosso.
+- Foco ao entrar num país ou estado: o resto ganha película de Tinta a 60% (o mar escurece no nível do país) e a área em foco ganha contorno em Papel.
+- Dourado do mapa mais vivo (`#E2B23A`), com halo `#F6D36B` em volta das áreas completas. O Dourado da marca (`#C9A34E`) continua nos textos.
 
 ## Marca (guia GL Pessoal v1)
 - Marinho `#13294B` (principal), Bordô `#6B1420` (destaque), Dourado `#C9A34E` (acento, nunca texto pequeno em fundo claro), Marrom Café `#3B2418`, Papel `#F5F0E8`, Tinta `#000F0C`.
