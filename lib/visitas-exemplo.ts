@@ -5,7 +5,7 @@ export type Situacao = "visitado" | "completo";
 
 export const situacaoPorPais: Record<string, Situacao> = {
   BR: "visitado",
-  GB: "visitado",
+  "GB-ENG": "visitado",
   IT: "visitado",
   PT: "visitado",
   CH: "visitado",

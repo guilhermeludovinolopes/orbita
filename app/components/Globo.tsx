@@ -35,7 +35,9 @@ function costurarLinhaDeData(f: GeoJSON.Feature) {
   }
 }
 
-type PaisSelecionado ={ codigo: string; nome: string; situacao: Situacao | null };
+const CODIGO_NUMERICO_REINO_UNIDO = "826";
+
+type PaisSelecionado = { codigo: string; nome: string; situacao: Situacao | null };
 
 export default function Globo() {
   const recipiente = useRef<HTMLDivElement>(null);
@@ -76,14 +78,21 @@ export default function Globo() {
 
     // Busca os contornos já, em paralelo com a preparação do mapa
     const contornos = import("world-atlas/countries-50m.json");
+    // O Reino Unido aparece como 4 nações (ver scripts/extrair-nacoes-reino-unido.mjs)
+    const nacoesReinoUnido = fetch("/geo/reino-unido.json").then((r) => r.json() as Promise<GeoJSON.FeatureCollection>);
 
     mapa.once("style.load", async () => {
       const topo = (await contornos).default as unknown as Topology;
       const colecao = feature(topo, topo.objects.countries) as GeoJSON.FeatureCollection;
+      colecao.features = colecao.features.filter((f) => String(f.id) !== CODIGO_NUMERICO_REINO_UNIDO);
       colecao.features.forEach(costurarLinhaDeData);
       for (const f of colecao.features) {
         const codigo = f.id ? paises.numericToAlpha2(String(f.id)) : undefined;
-        f.properties = { ...f.properties, codigo: codigo ?? "", situacao: (codigo && situacaoPorPais[codigo]) || "" };
+        f.properties = { ...f.properties, codigo: codigo ?? "", nome: codigo ? paises.getName(codigo, "pt") : "" };
+      }
+      colecao.features.push(...(await nacoesReinoUnido).features);
+      for (const f of colecao.features) {
+        f.properties!.situacao = situacaoPorPais[f.properties!.codigo] ?? "";
       }
 
       mapa.addSource("paises", { type: "geojson", data: colecao, promoteId: "codigo" });
@@ -128,12 +137,13 @@ export default function Globo() {
       });
 
       mapa.on("click", "paises", (e) => {
-        const codigo = e.features?.[0]?.properties?.codigo as string | undefined;
+        const propriedades = e.features?.[0]?.properties;
+        const codigo = propriedades?.codigo as string | undefined;
         if (!codigo) return;
         girando = false;
         setSelecionado({
           codigo,
-          nome: paises.getName(codigo, "pt") ?? codigo,
+          nome: (propriedades?.nome as string) || codigo,
           situacao: situacaoPorPais[codigo] ?? null,
         });
         mapa.flyTo({ center: e.lngLat, zoom: Math.max(mapa.getZoom(), 2.6), duration: 1200 });
