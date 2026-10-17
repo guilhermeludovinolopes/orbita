@@ -21,10 +21,15 @@ App web pessoal do Guilherme Lopes (linha **GL Pessoal**, sem fins profissionais
 
 ## Mapa e cores
 - Globo 3D; clique no país → mapa do país por 2º nível; clique no estado → municípios.
-- Não visitado: sem preenchimento e sem borda. Visitado: verde. Completo (visitou absolutamente tudo dentro): dourado.
+- Oceano: Marinho. Espaço ao redor do globo: Tinta.
+- Não visitado: terra em tom pastel (`#D8CFBF`, em avaliação). Visitado: verde. Completo (visitou absolutamente tudo dentro): dourado.
+- Divisas na cor do oceano, para separar sem desenhar borda.
 
 ## Marca (guia GL Pessoal v1)
 - Marinho `#13294B` (principal), Bordô `#6B1420` (destaque), Dourado `#C9A34E` (acento, nunca texto pequeno em fundo claro), Marrom Café `#3B2418`, Papel `#F5F0E8`, Tinta `#000F0C`.
-- Verde novo em avaliação: `#2E6A4F` (ainda não aprovado).
+- Verde novo em avaliação: `#2E6A4F` (ainda não aprovado). Pastel da terra não visitada: `#D8CFBF` (em avaliação).
+
+## Ambiente
+- No PowerShell desta máquina, use `npm.cmd` (scripts `.ps1` estão bloqueados).
 - Instrument Sans (600 títulos, 400 texto), IBM Plex Mono para legendas e dados. Ênfase só por peso, nunca itálico.
 - Evitar roxo, rosa e gradientes. Um acento de cor por peça. Símbolo sobre Tinta ou Marinho.
