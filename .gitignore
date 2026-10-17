@@ -1,0 +1,23 @@
+# Dados pessoais de viagem: ficam fora do repositório público
+dados/
+*.xlsx
+*.csv
+
+# Segredos
+.env
+.env*.local
+
+# Dependências e builds
+node_modules/
+.next/
+out/
+build/
+.vercel/
+
+# Python
+__pycache__/
+*.pyc
+
+# Sistema
+.DS_Store
+Thumbs.db
