@@ -17,8 +17,10 @@ App web pessoal do Guilherme Lopes (linha **GL Pessoal**, sem fins profissionais
 - Fonte original: planilha `~/Documents/Arrumar/Roadmap - Guilherme Lopes.xlsx` (aba "Time Line"). Não alterar.
 - `dados/` fica fora do Git (dados pessoais em repo público).
 - Cada visita = lugar (por código oficial) + data (ano obrigatório; mês e dia opcionais) + observação livre + local específico opcional (ex.: Riviera de São Lourenço dentro de Bertioga).
-- Hierarquia: país → estado (1º nível) → **condado, só onde existe** (US, IE) → município. O município fica sempre no mesmo nível em todos os países (São Paulo está no nível de Dublin, não no de County Dublin). Sem condado, o zoom vai direto do estado para o município. Nomes oficiais locais.
+- Hierarquia: país → estado (1º nível) → **condado, só onde existe** (condado nos EUA e na Irlanda, província na Itália, distrito na Suíça) → município. O município fica sempre no mesmo nível em todos os países (São Paulo está no nível de Dublin, não no de County Dublin). Sem condado, o zoom vai direto do estado para o município. Nomes oficiais locais.
 - Reino Unido separado em 4 nações, cada uma como "país" no globo: Inglaterra (`GB-ENG`), Escócia (`GB-SCT`), País de Gales (`GB-WLS`), Irlanda do Norte (`GB-NIR`).
+- Londres é um lugar só (os 33 distritos juntos), com o código ONS da região Greater London (`E12000007`). Dublin = Dublin City, com código provisório até o mapa da Irlanda.
+- Códigos oficiais: IBGE (BR), Census/FIPS (US), ISTAT (IT), BFS (CH), INE/DICO (PT), ONS (Inglaterra); 1º nível em ISO 3166-2. Pipeline: `aplicar_respostas.py` → `casar_codigos.py` → `gerar_importacao.py` (o SQL gerado fica em `dados/` e é rodado no SQL Editor).
 
 ## Mapa e cores
 - Globo 3D; clique no país → mapa do país por 2º nível; clique no estado → municípios.
