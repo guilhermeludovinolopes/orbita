@@ -81,6 +81,15 @@
   font-size: 16px;
 }
 
+.detalhe {
+  margin-top: 6px;
+  font-family: var(--fonte-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
 .nota {
   margin-top: 16px;
   font-size: 14px;

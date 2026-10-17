@@ -7,7 +7,7 @@ import { feature } from "topojson-client";
 import type { Topology } from "topojson-specification";
 import paises from "i18n-iso-countries";
 import pt from "i18n-iso-countries/langs/pt.json";
-import { situacaoPorPais, type Situacao } from "@/lib/visitas-exemplo";
+import { carregarResumoPorPais, type ResumoPais } from "@/lib/visitas";
 import estilos from "./Globo.module.css";
 
 paises.registerLocale(pt);
@@ -66,7 +66,14 @@ function desenharEstrelas(tela: HTMLCanvasElement) {
   }
 }
 
-type PaisSelecionado = { codigo: string; nome: string; situacao: Situacao | null };
+type PaisSelecionado = { codigo: string; nome: string; resumo: ResumoPais | null };
+
+const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
+
+function detalhe({ visitas, lugares, primeiroAno, ultimoAno }: ResumoPais) {
+  const anos = primeiroAno === ultimoAno ? `${primeiroAno}` : `${primeiroAno}–${ultimoAno}`;
+  return `${plural(visitas, "visita", "visitas")} · ${plural(lugares, "lugar", "lugares")} · ${anos}`;
+}
 
 export default function Globo() {
   const recipiente = useRef<HTMLDivElement>(null);
@@ -130,6 +137,12 @@ export default function Globo() {
     const contornos = import("world-atlas/countries-50m.json");
     // O Reino Unido aparece como 4 nações (ver scripts/extrair-nacoes-reino-unido.mjs)
     const nacoesReinoUnido = fetch("/geo/reino-unido.json").then((r) => r.json() as Promise<GeoJSON.FeatureCollection>);
+    // Visitas do banco; se o banco falhar, o globo aparece todo como não visitado
+    let resumoPorPais: Record<string, ResumoPais> = {};
+    const visitas = carregarResumoPorPais().catch((erro) => {
+      console.error("Não consegui carregar as visitas", erro);
+      return {};
+    });
 
     mapa.once("style.load", async () => {
       const topo = (await contornos).default as unknown as Topology;
@@ -141,8 +154,9 @@ export default function Globo() {
         f.properties = { ...f.properties, codigo: codigo ?? "", nome: codigo ? paises.getName(codigo, "pt") : "" };
       }
       colecao.features.push(...(await nacoesReinoUnido).features);
+      resumoPorPais = await visitas;
       for (const f of colecao.features) {
-        f.properties!.situacao = situacaoPorPais[f.properties!.codigo] ?? "";
+        f.properties!.situacao = resumoPorPais[f.properties!.codigo]?.situacao ?? "";
       }
 
       mapa.addSource("paises", { type: "geojson", data: colecao, promoteId: "codigo" });
@@ -238,7 +252,7 @@ export default function Globo() {
         setSelecionado({
           codigo,
           nome: (propriedades?.nome as string) || codigo,
-          situacao: situacaoPorPais[codigo] ?? null,
+          resumo: resumoPorPais[codigo] ?? null,
         });
         mapa.flyTo({ center: e.lngLat, zoom: Math.max(mapa.getZoom(), 2.6), duration: 1200 });
       });
@@ -271,12 +285,13 @@ export default function Globo() {
           <p className={estilos.rotulo}>{selecionado.codigo}</p>
           <h2 className={estilos.nome}>{selecionado.nome}</h2>
           <p className={estilos.situacao}>
-            {selecionado.situacao === "completo"
+            {selecionado.resumo?.situacao === "completo"
               ? "Completo — você visitou tudo aqui"
-              : selecionado.situacao === "visitado"
+              : selecionado.resumo
                 ? "Visitado"
                 : "Ainda não visitado"}
           </p>
+          {selecionado.resumo && <p className={estilos.detalhe}>{detalhe(selecionado.resumo)}</p>}
           <p className={estilos.nota}>Em breve: o mapa por estados e municípios.</p>
         </aside>
       )}
