@@ -274,7 +274,24 @@ export default function Globo() {
       (mapa.getSource("foco") as GeoJSONSource).setData({ type: "FeatureCollection", features: [] });
     }
 
+    // Foco no estado: a mesma película sobre os outros estados, e o contorno em Papel passa para o estado
+    function focarEstado(estado: GeoJSON.Feature) {
+      desfocarEstado();
+      mapa.addLayer({
+        id: "pelicula-estados",
+        type: "fill",
+        source: "estados",
+        filter: ["!=", ["get", "codigo"], estado.properties!.codigo],
+        paint: { "fill-color": COR.pelicula, "fill-opacity": 0.6 },
+      });
+      (mapa.getSource("foco") as GeoJSONSource).setData(estado);
+    }
+    function desfocarEstado() {
+      if (mapa.getLayer("pelicula-estados")) mapa.removeLayer("pelicula-estados");
+    }
+
     function esconderCamada(camada: Camada) {
+      if (camada === "estados") desfocarEstado(); // a película dos estados usa a fonte "estados"
       for (const id of [`${camada}-destaque`, `${camada}-divisas`, `${camada}-brilho`, camada]) if (mapa.getLayer(id)) mapa.removeLayer(id);
       if (mapa.getSource(camada)) mapa.removeSource(camada);
     }
@@ -308,6 +325,7 @@ export default function Globo() {
         return { ...f, properties: { ...f.properties, situacao: situacao(resumo, f.properties!.total) ?? "" } };
       });
       esconderCamada("municipios");
+      desfocarEstado();
       focar(codigo);
       mostrarCamada("estados", estados);
       mapa.moveLayer("foco"); // contorno do país por cima das divisas dos estados
@@ -332,12 +350,15 @@ export default function Globo() {
     async function entrarNoEstado(codigo: string, nome: string, total: number) {
       const det = DETALHE_PAISES[atual.pais!];
       const doEstado = visitas.filter((v) => v.nivel1 === codigo);
-      const geo = await buscarGeo(det.municipios(codigo));
+      const [geo, geoEstados] = await Promise.all([buscarGeo(det.municipios(codigo)), buscarGeo(det.estados)]);
       const municipios = geo.features.map((f) => {
         const resumo = resumir(doEstado.filter((v) => v.municipio === f.properties!.codigo));
         return { ...f, properties: { ...f.properties, situacao: situacao(resumo) ?? "" } };
       });
+      const estado = geoEstados.features.find((f) => f.properties?.codigo === codigo);
+      if (estado) focarEstado(estado);
       mostrarCamada("municipios", municipios);
+      mapa.moveLayer("foco"); // contorno do estado por cima das divisas dos municípios
       Object.assign(atual, { estado: codigo, nomeEstado: nome });
       setNivel({ ...atual });
 

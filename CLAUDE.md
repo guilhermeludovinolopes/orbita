@@ -30,7 +30,7 @@ App web pessoal do Guilherme Lopes (linha **GL Pessoal**, sem fins profissionais
 - Espaço ao redor do globo: Tinta com estrelas. Atmosfera bem sutil, que some ao aproximar (exceção consciente à regra de evitar gradientes, em avaliação).
 - Não visitado: terra em tom pastel (`#D8CFBF`, em avaliação). Visitado: verde. Completo (visitou absolutamente tudo dentro): dourado.
 - Divisas em Marrom Café, visíveis sobre todas as cores e o mar. País sob o mouse: contorno em Bordô, mais grosso.
-- País em foco (ao entrar nele): os outros países ganham película de Tinta a 60%, o mar escurece e o país ganha contorno em Papel.
+- Foco ao entrar num país ou estado: o resto ganha película de Tinta a 60% (o mar escurece no nível do país) e a área em foco ganha contorno em Papel.
 - Dourado do mapa mais vivo (`#E2B23A`), com halo `#F6D36B` em volta das áreas completas. O Dourado da marca (`#C9A34E`) continua nos textos.
 
 ## Marca (guia GL Pessoal v1)
