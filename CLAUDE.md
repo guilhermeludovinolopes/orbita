@@ -23,7 +23,8 @@ App web pessoal do Guilherme Lopes (linha **GL Pessoal**, sem fins profissionais
 - Códigos oficiais: IBGE (BR), Census/FIPS (US), ISTAT (IT), BFS (CH), INE/DICO (PT), ONS (Inglaterra); 1º nível em ISO 3166-2. Pipeline: `aplicar_respostas.py` → `casar_codigos.py` → `gerar_importacao.py` (o SQL gerado fica em `dados/` e é rodado no SQL Editor).
 
 ## Mapa e cores
-- Globo 3D; clique no país → mapa do país por 2º nível; clique no estado → municípios. Países com esse detalhe ficam em `lib/detalhe-paises.ts` (por enquanto só o Brasil, com as malhas do IBGE via `scripts/gerar-brasil.mjs`).
+- Globo 3D; clique no país → mapa do país por 2º nível; clique no estado → municípios. Países com esse detalhe ficam em `lib/detalhe-paises.ts`: Brasil (IBGE), EUA (Census), Itália (ISTAT), Suíça (swisstopo + BFS), Portugal (DGT + INE), Inglaterra (ONS) e Irlanda (Tailte Éireann), gerados por `scripts/gerar-<país>.mjs`. `scripts/conferir-mapas.mjs` confere se toda visita do banco acha o seu lugar nos mapas.
+- Com condado (EUA, Itália, Suíça, Irlanda): país → estado → condado → município. Dentro do condado em foco, o que não é município (áreas rurais dos EUA) aparece num pastel mais escuro (`#B7AE9D`).
 - Dourado: estado completo quando todos os municípios dele foram visitados; país completo quando todos os municípios do país foram. O município visitado é sempre verde.
 - Oceano realista: Blue Marble da NASA (domínio público) só com o mar, gerado por `scripts/gerar-oceano.mjs` em `public/geo/oceano.jpg`. Marinho fica por baixo, como reserva.
 - Relevo sombreado da Natural Earth por cima das cores dos países (`scripts/gerar-relevo.mjs`); lagos e rios na cor do mar raso (`scripts/gerar-aguas.mjs`). Sem nuvens e sem dia/noite (decisão do Guilherme).

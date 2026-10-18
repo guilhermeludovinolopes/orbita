@@ -130,10 +130,10 @@ def main():
                 r.update(pais_cod="GB-ENG", n1_cod="E12000007", mun_cod="E12000007", mun_oficial="Londres",
                          fonte="ONS", situacao="OK")
             elif pais == "Irlanda":
-                # Decisão do Guilherme: Dublin City (a prefeitura da cidade, uma das 4 do condado).
-                # Código provisório até montarmos o mapa da Irlanda com a fonte oficial.
-                r.update(pais_cod="IE", n1_cod="IE-L", condado_cod="IE-D", mun_cod="IE-D-DUBLIN-CITY",
-                         mun_oficial="Dublin City", fonte="ISO 3166-2 (cidade provisória)", situacao="CÓDIGO PROVISÓRIO")
+                # Decisão do Guilherme: Dublin City (a prefeitura da cidade, uma das 4 do condado),
+                # com o código oficial da Tailte Éireann (BDY_ID)
+                r.update(pais_cod="IE", n1_cod="IE-L", condado_cod="IE-D", mun_cod="265011",
+                         mun_oficial="Dublin City", fonte="ISO 3166-2 + Tailte Éireann", situacao="OK")
             elif pais == "Portugal":
                 codigo, oficial = buscar_portugal(mun)
                 r.update(pais_cod="PT", n1_cod=f"PT-{codigo[:2]}", mun_cod=codigo, mun_oficial=oficial, fonte="INE (geoapi.pt)")

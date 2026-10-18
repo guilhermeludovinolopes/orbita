@@ -26,6 +26,7 @@ setWorkerUrl("/maplibre/maplibre-gl-worker.mjs"); // copiado por scripts/copiar-
 const COR = {
   oceano: "#13294B", // Marinho
   naoVisitado: "#D8CFBF", // pastel (em avaliação)
+  semMunicipio: "#B7AE9D", // pastel mais escuro: dentro da área em foco, fora de qualquer município
   visitado: "#2E6A4F", // verde (em avaliação)
   completo: "#E2B23A", // Dourado mais vivo no mapa, para brilhar (o Dourado da marca é #C9A34E)
   brilho: "#F6D36B", // halo em volta das áreas completas
@@ -54,19 +55,32 @@ function poligonosDe(f: GeoJSON.Feature): GeoJSON.Position[][][] {
   return g.type === "Polygon" ? [g.coordinates] : g.type === "MultiPolygon" ? g.coordinates : [];
 }
 
+// Enquadramento das formas. Se elas cruzam a linha de data (Alasca, Fiji), mede as longitudes
+// de 0 a 360 em vez de -180 a 180, para não enquadrar o planeta inteiro.
 function limitesDe(features: GeoJSON.Feature[]): LngLatBoundsLike {
-  let [oeste, sul, leste, norte] = [180, 90, -180, -90];
+  const lngs: number[] = [];
+  let [sul, norte] = [90, -90];
   for (const f of features) {
     for (const poligono of poligonosDe(f)) {
       for (const [lng, lat] of poligono[0]) {
-        oeste = Math.min(oeste, lng);
-        leste = Math.max(leste, lng);
+        lngs.push(lng);
         sul = Math.min(sul, lat);
         norte = Math.max(norte, lat);
       }
     }
   }
-  return [[oeste, sul], [leste, norte]];
+  const deslocadas = lngs.map((l) => (l < 0 ? l + 360 : l));
+  const largura = (l: number[]) => Math.max(...l) - Math.min(...l);
+  const usar = largura(deslocadas) < largura(lngs) ? deslocadas : lngs;
+  return [[Math.min(...usar), sul], [Math.max(...usar), norte]];
+}
+
+// A parte principal de um país (o maior polígono): os EUA contíguos sem Alasca e Havaí, por exemplo
+function partePrincipal(f: GeoJSON.Feature): GeoJSON.Feature {
+  const area = (anel: GeoJSON.Position[]) =>
+    Math.abs(anel.reduce((s, [x, y], i) => s + x * anel[(i + 1) % anel.length][1] - anel[(i + 1) % anel.length][0] * y, 0));
+  const maior = poligonosDe(f).sort((a, b) => area(b[0]) - area(a[0]))[0];
+  return { ...f, geometry: { type: "Polygon", coordinates: maior } };
 }
 
 const CODIGO_NUMERICO_REINO_UNIDO = "826";
@@ -105,36 +119,49 @@ const PREENCHIMENTO: ExpressionSpecification = [
   COR.naoVisitado,
 ];
 
-// As três camadas do zoom: o que aparece em cada nível e quão grossas são as divisas
+// As camadas do zoom: o que aparece em cada nível e quão grossas são as divisas
 const NIVEIS = {
   paises: { divisa: [1, 0.5, 4, 0.9, 7, 1.4], destaque: [1, 1.8, 4, 2.6, 7, 3.4] },
   estados: { divisa: [3, 0.6, 6, 1.2, 9, 1.6], destaque: [3, 2.2, 6, 3, 9, 3.6] },
+  condados: { divisa: [4, 0.4, 7, 0.9, 10, 1.3], destaque: [4, 1.8, 7, 2.6, 10, 3.2] },
   municipios: { divisa: [5, 0.25, 8, 0.6, 11, 1], destaque: [5, 1.6, 8, 2.4, 11, 3] },
 } as const;
 type Camada = keyof typeof NIVEIS;
 
-type Nivel = { pais?: string; nomePais?: string; estado?: string; nomeEstado?: string };
+type Nivel = {
+  pais?: string;
+  nomePais?: string;
+  estado?: string;
+  nomeEstado?: string;
+  totalEstado?: number;
+  condado?: string;
+  nomeCondado?: string;
+};
 
 type Selecionado = {
-  tipo: "país" | "estado" | "município";
+  tipo: string; // "país", "estado", "região", "condado", "cidade"...
   codigo: string;
   nome: string;
   situacao: Situacao | null;
   resumo: Resumo | null;
   contagem?: string; // ex.: "12 de 27 estados · 40 de 5.570 municípios"
+  dica?: string; // ex.: "Clique em um estado para ver de perto."
+  nomeMunicipios?: string; // para o texto do dourado: "todos os comuni"
+  folha?: boolean; // último nível (município): mostra os anos
+  semDetalhe?: boolean; // país ainda sem mapa por estados
 };
 
 const plural = (n: number, um: string, varios: string) => `${n.toLocaleString("pt-BR")} ${n === 1 ? um : varios}`;
 
-function detalhe({ visitas, lugares, primeiroAno, ultimoAno }: Resumo, tipo: Selecionado["tipo"]) {
+function detalhe({ visitas, lugares, primeiroAno, ultimoAno }: Resumo, folha?: boolean) {
   const anos = primeiroAno === ultimoAno ? `${primeiroAno}` : `${primeiroAno}–${ultimoAno}`;
   const partes = [plural(visitas, "visita", "visitas")];
-  if (tipo !== "município") partes.push(plural(lugares, "lugar", "lugares"));
+  if (!folha) partes.push(plural(lugares, "lugar", "lugares"));
   return [...partes, anos].join(" · ");
 }
 
 function textoSituacao(s: Selecionado) {
-  if (s.situacao === "completo") return `Completo — você visitou todos os municípios`;
+  if (s.situacao === "completo") return `Completo — você visitou todos os ${s.nomeMunicipios ?? "lugares"}`;
   if (s.situacao === "visitado") return "Visitado";
   return "Ainda não visitado";
 }
@@ -274,45 +301,85 @@ export default function Globo() {
       (mapa.getSource("foco") as GeoJSONSource).setData({ type: "FeatureCollection", features: [] });
     }
 
-    // Foco no estado: a mesma película sobre os outros estados, e o contorno em Papel passa para o estado
-    function focarEstado(estado: GeoJSON.Feature) {
-      desfocarEstado();
+    // Foco dentro do país: a mesma película sobre as áreas vizinhas da camada (estados ou condados),
+    // e o contorno em Papel passa para a área escolhida
+    function focarArea(camada: "estados" | "condados", area: GeoJSON.Feature) {
+      desfocarArea(camada);
       mapa.addLayer({
-        id: "pelicula-estados",
+        id: `pelicula-${camada}`,
         type: "fill",
-        source: "estados",
-        filter: ["!=", ["get", "codigo"], estado.properties!.codigo],
+        source: camada,
+        filter: ["!=", ["get", "codigo"], area.properties!.codigo],
         paint: { "fill-color": COR.pelicula, "fill-opacity": 0.6 },
       });
-      (mapa.getSource("foco") as GeoJSONSource).setData(estado);
+      // Dentro da área em foco, o que não é município (áreas rurais dos EUA) fica num pastel
+      // mais escuro, e não com a cor da própria área, que confundiria com município visitado
+      mapa.addLayer(
+        {
+          id: `fundo-${camada}`,
+          type: "fill",
+          source: camada,
+          filter: ["==", ["get", "codigo"], area.properties!.codigo],
+          paint: { "fill-color": COR.semMunicipio },
+        },
+        "relevo",
+      );
+      (mapa.getSource("foco") as GeoJSONSource).setData(area);
     }
-    function desfocarEstado() {
-      if (mapa.getLayer("pelicula-estados")) mapa.removeLayer("pelicula-estados");
+    function desfocarArea(camada: "estados" | "condados") {
+      for (const id of [`pelicula-${camada}`, `fundo-${camada}`]) if (mapa.getLayer(id)) mapa.removeLayer(id);
     }
 
     function esconderCamada(camada: Camada) {
-      if (camada === "estados") desfocarEstado(); // a película dos estados usa a fonte "estados"
+      if (camada === "estados" || camada === "condados") desfocarArea(camada); // a película usa a fonte da camada
       for (const id of [`${camada}-destaque`, `${camada}-divisas`, `${camada}-brilho`, camada]) if (mapa.getLayer(id)) mapa.removeLayer(id);
       if (mapa.getSource(camada)) mapa.removeSource(camada);
     }
 
     // A camada mais funda visível é a que responde ao mouse
-    const camadasAtivas = (): Camada[] =>
-      atual.estado ? ["municipios", "estados", "paises"] : atual.pais ? ["estados", "paises"] : ["paises"];
+    function camadasAtivas(): Camada[] {
+      if (atual.condado) return ["municipios", "condados", "estados", "paises"];
+      if (atual.estado) return DETALHE_PAISES[atual.pais!].condados ? ["condados", "estados", "paises"] : ["municipios", "estados", "paises"];
+      return atual.pais ? ["estados", "paises"] : ["paises"];
+    }
 
     function featureSob(ponto: PointLike): MapGeoJSONFeature | undefined {
       const [f] = mapa.queryRenderedFeatures(ponto, { layers: camadasAtivas().filter((c) => mapa.getLayer(c)) });
       return f;
     }
 
+    const contar = (n: number, total: number, [um, varios]: readonly [string, string, string]) =>
+      `${n.toLocaleString("pt-BR")} de ${total.toLocaleString("pt-BR")} ${total === 1 ? um : varios}`;
+
+    const dica = ([singular, , artigo]: readonly [string, string, string]) => `Clique em ${artigo} ${singular} para ver de perto.`;
+
+    // Marca cada área com a situação (visitado/completo), a partir das visitas que caem nela
+    function marcar(features: GeoJSON.Feature[], visitasDe: (codigo: string) => Visita[], comTotal: boolean) {
+      return features.map((f) => {
+        const resumo = resumir(visitasDe(f.properties!.codigo));
+        const s = comTotal ? situacao(resumo, f.properties!.total) : situacao(resumo);
+        return { ...f, properties: { ...f.properties, situacao: s ?? "" } };
+      });
+    }
+
+    function sairDosNiveis(apartirDe: "estado" | "condado") {
+      esconderCamada("municipios");
+      if (apartirDe === "estado") esconderCamada("condados");
+      delete atual.condado;
+      delete atual.nomeCondado;
+      if (apartirDe === "estado") {
+        delete atual.estado;
+        delete atual.nomeEstado;
+        delete atual.totalEstado;
+      }
+    }
+
     function mostrarMundo() {
       desfocar();
-      esconderCamada("municipios");
+      sairDosNiveis("estado");
       esconderCamada("estados");
       delete atual.pais;
       delete atual.nomePais;
-      delete atual.estado;
-      delete atual.nomeEstado;
       setNivel({});
     }
 
@@ -320,77 +387,109 @@ export default function Globo() {
       const det = DETALHE_PAISES[codigo];
       const doPais = visitas.filter((v) => v.pais === codigo);
       const geo = await buscarGeo(det.estados);
-      const estados = geo.features.map((f) => {
-        const resumo = resumir(doPais.filter((v) => v.nivel1 === f.properties!.codigo));
-        return { ...f, properties: { ...f.properties, situacao: situacao(resumo, f.properties!.total) ?? "" } };
-      });
-      esconderCamada("municipios");
-      desfocarEstado();
+      const estados = marcar(geo.features, (c) => doPais.filter((v) => v.nivel1 === c), true);
+      sairDosNiveis("estado");
       focar(codigo);
       mostrarCamada("estados", estados);
       mapa.moveLayer("foco"); // contorno do país por cima das divisas dos estados
       Object.assign(atual, { pais: codigo, nomePais: nome });
-      delete atual.estado;
-      delete atual.nomeEstado;
       setNivel({ ...atual });
 
       const resumo = resumir(doPais);
-      const estadosVisitados = estados.filter((f) => f.properties.situacao).length;
+      const visitados = estados.filter((f) => f.properties.situacao).length;
       setSelecionado({
         tipo: "país",
         codigo,
         nome,
         situacao: situacao(resumo, det.totalMunicipios),
         resumo,
-        contagem: `${estadosVisitados} de ${estados.length} estados · ${(resumo?.lugares ?? 0).toLocaleString("pt-BR")} de ${det.totalMunicipios.toLocaleString("pt-BR")} municípios`,
+        contagem: `${contar(visitados, estados.length, det.nomes.estado)} · ${contar(resumo?.lugares ?? 0, det.totalMunicipios, det.nomes.municipio)}`,
+        dica: dica(det.nomes.estado),
+        nomeMunicipios: det.nomes.municipio[1],
       });
-      mapa.fitBounds(limitesDe(geo.features), { padding, duration: 1400 });
+      // Enquadra a parte principal do país (sem ilhas e territórios distantes)
+      const contorno = contornosPaises.find((f) => f.properties?.codigo === codigo);
+      mapa.fitBounds(limitesDe(contorno ? [partePrincipal(contorno)] : geo.features), { padding, duration: 1400 });
     }
 
     async function entrarNoEstado(codigo: string, nome: string, total: number) {
       const det = DETALHE_PAISES[atual.pais!];
-      const doEstado = visitas.filter((v) => v.nivel1 === codigo);
-      const [geo, geoEstados] = await Promise.all([buscarGeo(det.municipios(codigo)), buscarGeo(det.estados)]);
-      const municipios = geo.features.map((f) => {
-        const resumo = resumir(doEstado.filter((v) => v.municipio === f.properties!.codigo));
-        return { ...f, properties: { ...f.properties, situacao: situacao(resumo) ?? "" } };
-      });
+      const doEstado = visitas.filter((v) => v.pais === atual.pais && v.nivel1 === codigo);
+      const comCondados = Boolean(det.condados);
+      const [geo, geoEstados] = await Promise.all([
+        buscarGeo(comCondados ? det.condados!(codigo) : det.municipios(codigo)),
+        buscarGeo(det.estados),
+      ]);
+      sairDosNiveis("condado");
+      esconderCamada("condados");
       const estado = geoEstados.features.find((f) => f.properties?.codigo === codigo);
-      if (estado) focarEstado(estado);
-      mostrarCamada("municipios", municipios);
-      mapa.moveLayer("foco"); // contorno do estado por cima das divisas dos municípios
-      Object.assign(atual, { estado: codigo, nomeEstado: nome });
+      if (estado) focarArea("estados", estado);
+      if (comCondados) mostrarCamada("condados", marcar(geo.features, (c) => doEstado.filter((v) => v.condado === c), true));
+      else mostrarCamada("municipios", marcar(geo.features, (c) => doEstado.filter((v) => v.municipio === c), false));
+      mapa.moveLayer("foco"); // contorno do estado por cima das divisas de dentro dele
+      Object.assign(atual, { estado: codigo, nomeEstado: nome, totalEstado: total });
       setNivel({ ...atual });
 
       const resumo = resumir(doEstado);
+      const contagens = [contar(resumo?.lugares ?? 0, total, det.nomes.municipio)];
+      if (comCondados) contagens.unshift(contar(geo.features.filter((f) => doEstado.some((v) => v.condado === f.properties!.codigo)).length, geo.features.length, det.nomes.condado!));
       setSelecionado({
-        tipo: "estado",
+        tipo: det.nomes.estado[0],
         codigo,
         nome,
         situacao: situacao(resumo, total),
         resumo,
-        contagem: `${(resumo?.lugares ?? 0).toLocaleString("pt-BR")} de ${total.toLocaleString("pt-BR")} municípios`,
+        contagem: contagens.join(" · "),
+        dica: dica(comCondados ? det.nomes.condado! : det.nomes.municipio),
+        nomeMunicipios: det.nomes.municipio[1],
       });
       mapa.fitBounds(limitesDe(geo.features), { padding, duration: 1400 });
     }
 
+    async function entrarNoCondado(codigo: string, nome: string, total: number) {
+      const det = DETALHE_PAISES[atual.pais!];
+      const doCondado = visitas.filter((v) => v.pais === atual.pais && v.nivel1 === atual.estado && v.condado === codigo);
+      const [geo, geoCondados] = await Promise.all([buscarGeo(det.municipios(atual.estado!)), buscarGeo(det.condados!(atual.estado!))]);
+      const municipios = geo.features.filter((f) => f.properties?.condado === codigo);
+      const condado = geoCondados.features.find((f) => f.properties?.codigo === codigo);
+      if (condado) focarArea("condados", condado);
+      mostrarCamada("municipios", marcar(municipios, (c) => doCondado.filter((v) => v.municipio === c), false));
+      mapa.moveLayer("foco");
+      Object.assign(atual, { condado: codigo, nomeCondado: nome });
+      setNivel({ ...atual });
+
+      const resumo = resumir(doCondado);
+      setSelecionado({
+        tipo: det.nomes.condado![0],
+        codigo,
+        nome,
+        situacao: situacao(resumo, total),
+        resumo,
+        contagem: contar(resumo?.lugares ?? 0, total, det.nomes.municipio),
+        dica: total ? dica(det.nomes.municipio) : `Este ${det.nomes.condado![0]} não tem ${det.nomes.municipio[1]} oficiais.`,
+        nomeMunicipios: det.nomes.municipio[1],
+      });
+      // Condado sem cidades (só área rural): enquadra o próprio condado
+      mapa.fitBounds(limitesDe(municipios.length ? municipios : condado ? [condado] : []), { padding, duration: 1400 });
+    }
+
     function mostrarMunicipio(codigo: string, nome: string) {
-      const resumo = resumir(visitas.filter((v) => v.municipio === codigo && v.nivel1 === atual.estado));
-      setSelecionado({ tipo: "município", codigo, nome, situacao: situacao(resumo), resumo });
+      const det = DETALHE_PAISES[atual.pais!];
+      const resumo = resumir(visitas.filter((v) => v.pais === atual.pais && v.nivel1 === atual.estado && v.municipio === codigo));
+      setSelecionado({ tipo: det.nomes.municipio[0], codigo, nome, situacao: situacao(resumo), resumo, folha: true });
     }
 
     function mostrarPaisSemDetalhe(codigo: string, nome: string, onde: LngLat) {
       const resumo = resumir(visitas.filter((v) => v.pais === codigo));
-      setSelecionado({ tipo: "país", codigo, nome, situacao: situacao(resumo), resumo });
+      setSelecionado({ tipo: "país", codigo, nome, situacao: situacao(resumo), resumo, semDetalhe: true });
       mapa.flyTo({ center: onde, zoom: Math.max(mapa.getZoom(), 2.6), duration: 1200 });
     }
 
     voltarRef.current = () => {
-      if (atual.estado) {
-        const pais = atual.pais!;
-        const nomePais = atual.nomePais!;
-        esconderCamada("municipios");
-        void entrarNoPais(pais, nomePais);
+      if (atual.condado) {
+        void entrarNoEstado(atual.estado!, atual.nomeEstado!, atual.totalEstado!);
+      } else if (atual.estado) {
+        void entrarNoPais(atual.pais!, atual.nomePais!);
       } else {
         mostrarMundo();
         setSelecionado(null);
@@ -518,6 +617,7 @@ export default function Globo() {
         girando = false;
         limparSobre();
         if (f.source === "municipios") return mostrarMunicipio(p.codigo, p.nome);
+        if (f.source === "condados") return void entrarNoCondado(p.codigo, p.nome, p.total);
         if (f.source === "estados") return void entrarNoEstado(p.codigo, p.nome, p.total);
         // Clicou num país
         const nome = (p.nome as string) || p.codigo;
@@ -546,11 +646,12 @@ export default function Globo() {
       {nivel.pais && (
         <nav className={estilos.trilha} aria-label="Onde você está no mapa">
           <button className={estilos.voltar} onClick={() => voltarRef.current()}>
-            ← {nivel.estado ? nivel.nomePais : "Mundo"}
+            ← {nivel.condado ? nivel.nomeEstado : nivel.estado ? nivel.nomePais : "Mundo"}
           </button>
           <span className={estilos.caminho}>
             Mundo / {nivel.nomePais}
             {nivel.estado && ` / ${nivel.nomeEstado}`}
+            {nivel.condado && ` / ${nivel.nomeCondado}`}
           </span>
         </nav>
       )}
@@ -572,16 +673,10 @@ export default function Globo() {
           <h2 className={estilos.nome}>{selecionado.nome}</h2>
           <p className={estilos.situacao}>{textoSituacao(selecionado)}</p>
           {selecionado.contagem && <p className={estilos.detalhe}>{selecionado.contagem}</p>}
-          {selecionado.resumo && <p className={estilos.detalhe}>{detalhe(selecionado.resumo, selecionado.tipo)}</p>}
-          {selecionado.tipo === "município" && selecionado.resumo && (
-            <p className={estilos.anos}>{selecionado.resumo.anos.join(" · ")}</p>
-          )}
-          {selecionado.tipo === "país" && !DETALHE_PAISES[selecionado.codigo] && (
-            <p className={estilos.nota}>Em breve: o mapa por estados e municípios.</p>
-          )}
-          {selecionado.tipo !== "município" && DETALHE_PAISES[nivel.pais ?? ""] && (
-            <p className={estilos.nota}>Clique num {selecionado.tipo === "país" ? "estado" : "município"} para ver de perto.</p>
-          )}
+          {selecionado.resumo && <p className={estilos.detalhe}>{detalhe(selecionado.resumo, selecionado.folha)}</p>}
+          {selecionado.folha && selecionado.resumo && <p className={estilos.anos}>{selecionado.resumo.anos.join(" · ")}</p>}
+          {selecionado.semDetalhe && <p className={estilos.nota}>Em breve: o mapa por estados e municípios.</p>}
+          {selecionado.dica && <p className={estilos.nota}>{selecionado.dica}</p>}
         </aside>
       )}
     </div>

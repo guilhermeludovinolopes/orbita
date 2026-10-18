@@ -5,6 +5,7 @@ export type Situacao = "visitado" | "completo";
 export type Visita = {
   pais: string; // código do globo: "BR", "GB-ENG"...
   nivel1: string; // ISO 3166-2: "BR-SP"
+  condado: string | null; // só nos países com esse nível: FIPS 06037, ISTAT 215...
   municipio: string; // código oficial do país: IBGE 3518701
   ano: number;
 };
@@ -23,10 +24,16 @@ const PERFIL_DO_SITE = "guilherme";
 export async function carregarVisitas(): Promise<Visita[]> {
   const { data, error } = await obterSupabase()
     .from("visitas")
-    .select("pais_codigo, nivel1_codigo, nivel2_codigo, ano, perfis!inner(usuario)")
+    .select("pais_codigo, nivel1_codigo, condado_codigo, nivel2_codigo, ano, perfis!inner(usuario)")
     .eq("perfis.usuario", PERFIL_DO_SITE);
   if (error) throw error;
-  return data.map((v) => ({ pais: v.pais_codigo, nivel1: v.nivel1_codigo, municipio: v.nivel2_codigo, ano: v.ano }));
+  return data.map((v) => ({
+    pais: v.pais_codigo,
+    nivel1: v.nivel1_codigo,
+    condado: v.condado_codigo,
+    municipio: v.nivel2_codigo,
+    ano: v.ano,
+  }));
 }
 
 export function resumir(visitas: Visita[]): Resumo | null {
