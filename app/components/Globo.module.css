@@ -14,7 +14,7 @@
 
 .legenda {
   position: absolute;
-  left: 24px;
+  right: 24px;
   bottom: 24px;
   list-style: none;
   padding: 0;
@@ -41,8 +41,8 @@
 
 .painel {
   position: absolute;
-  top: 24px;
-  right: 24px;
+  bottom: 24px;
+  left: 24px;
   width: min(320px, calc(100% - 48px));
   padding: 24px;
   background: var(--tinta);
@@ -137,13 +137,12 @@
 
 @media (max-width: 600px) {
   .painel {
-    top: auto;
     bottom: 16px;
-    right: 16px;
+    left: 16px;
   }
 
   .legenda {
-    left: 16px;
+    right: 16px;
     top: 64px;
     bottom: auto;
   }
