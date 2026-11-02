@@ -1,0 +1,539 @@
+/* Painel "Minhas viagens": tela cheia, sobre Tinta, cobrindo o globo (que segue montado por trás) */
+.tela {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: var(--tinta);
+}
+
+.topo {
+  border-bottom: 1px solid rgba(245, 240, 232, 0.1);
+}
+
+.cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 20px 24px 16px;
+}
+
+.titulo {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.resumo {
+  margin-top: 4px;
+  font-family: var(--fonte-mono), monospace;
+  font-size: 12px;
+  color: var(--dourado);
+}
+
+.acoes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.busca,
+.campo input,
+.campo select,
+.campo textarea,
+.entrar input {
+  min-width: 0;
+  padding: 8px 10px;
+  background: rgba(245, 240, 232, 0.06);
+  border: 1px solid rgba(245, 240, 232, 0.18);
+  border-radius: 8px;
+  color: var(--papel);
+  font: inherit;
+  font-size: 14px;
+}
+
+.busca {
+  width: 240px;
+}
+
+.campo input,
+.campo select,
+.campo textarea {
+  width: 100%;
+}
+
+.campo select option {
+  background: var(--tinta);
+}
+
+.busca:focus,
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus,
+.entrar input:focus {
+  outline: none;
+  border-color: var(--dourado);
+}
+
+.campo :disabled {
+  opacity: 0.4;
+}
+
+.botao,
+.botaoPrincipal {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.botao {
+  background: none;
+  color: var(--papel);
+  border: 1px solid rgba(245, 240, 232, 0.3);
+}
+
+.botao:hover {
+  border-color: var(--papel);
+}
+
+.botaoPrincipal {
+  background: var(--papel);
+  color: var(--tinta);
+  border: 1px solid var(--papel);
+  font-weight: 600;
+}
+
+.botaoPrincipal:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.link {
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--papel);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.link:hover {
+  opacity: 1;
+}
+
+/* Faixa logo abaixo do cabeçalho: pedido de entrada ou aviso do modo de edição */
+.faixaEdicao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  max-width: 1120px;
+  margin: 0 auto 16px;
+  padding: 12px 16px;
+  border: 1px solid rgba(201, 163, 78, 0.45); /* Dourado */
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.topo > .faixaEdicao {
+  width: calc(100% - 48px);
+}
+
+.entrar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+}
+
+.entrar input {
+  flex: 1;
+  min-width: 200px;
+}
+
+.conteudo {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 240, 232, 0.25) transparent;
+}
+
+.coluna {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 16px 24px 48px;
+}
+
+.aviso {
+  margin: 12px 0;
+  font-size: 13px;
+  color: #f0a8a8;
+}
+
+/* Cada ano: setinha, número, contagem e as bandeiras do ano, todos na mesma linha */
+.ano {
+  border-bottom: 1px solid rgba(245, 240, 232, 0.08);
+}
+
+.cabecalhoAno {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.abrirAno {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  background: none;
+  border: none;
+  color: var(--papel);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.abrirAno:disabled {
+  cursor: default;
+}
+
+.seta {
+  width: 12px;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--dourado);
+  transition: transform 0.15s;
+}
+
+.setaAberta {
+  transform: rotate(90deg);
+}
+
+.numeroAno {
+  flex-shrink: 0;
+  font-family: var(--fonte-mono), monospace;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.contagem {
+  flex-shrink: 0;
+  font-family: var(--fonte-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dourado);
+}
+
+.bandeirasAno {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.bandeiraPequena {
+  width: 20px;
+  height: 15px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.maisPaises {
+  font-family: var(--fonte-mono), monospace;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.mais {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid rgba(245, 240, 232, 0.3);
+  border-radius: 50%;
+  color: var(--papel);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mais:hover {
+  border-color: var(--dourado);
+  color: var(--dourado);
+}
+
+/* Anos sem viagem: mais baixos e apagados, para a linha do tempo não pesar */
+.anoVazio .abrirAno {
+  padding: 6px 0;
+}
+
+.anoVazio .numeroAno {
+  font-size: 14px;
+  opacity: 0.35;
+}
+
+.anoVazio .contagem {
+  color: var(--papel);
+  opacity: 0.3;
+}
+
+/* Viagens do ano aberto: cartões em grade */
+.viagens {
+  list-style: none;
+  padding: 0 0 18px 26px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 10px;
+}
+
+.viagem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(245, 240, 232, 0.04);
+  border: 1px solid rgba(245, 240, 232, 0.1);
+  border-radius: 10px;
+}
+
+.bandeira {
+  width: 32px;
+  height: 24px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  object-fit: cover;
+  border-radius: 3px;
+}
+
+.textoViagem {
+  flex: 1;
+  min-width: 0;
+}
+
+.lugar {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.local {
+  font-weight: 400;
+  opacity: 0.75;
+}
+
+.onde {
+  margin-top: 2px;
+  font-family: var(--fonte-mono), monospace;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.data {
+  color: var(--dourado);
+}
+
+.observacao {
+  margin-top: 6px;
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.botoesViagem {
+  display: flex;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.botoesViagem button {
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--papel);
+  font-family: var(--fonte-mono), monospace;
+  font-size: 11px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.botoesViagem button:hover {
+  opacity: 1;
+}
+
+.rodape {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 10px 24px;
+  border-top: 1px solid rgba(245, 240, 232, 0.1);
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+/* Formulário: janela no centro, sobre o painel escurecido */
+.formularioFundo {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 6vh 16px 16px;
+  overflow-y: auto;
+  background: rgba(0, 15, 12, 0.75);
+}
+
+.formulario {
+  width: min(540px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px;
+  background: var(--tinta);
+  border: 1px solid rgba(245, 240, 232, 0.18);
+  border-radius: 12px;
+}
+
+.tituloFormulario {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.campo > span {
+  font-family: var(--fonte-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.campo textarea {
+  resize: vertical;
+}
+
+.linhaCampos {
+  display: grid;
+  grid-template-columns: 1.2fr 1.4fr 0.8fr;
+  gap: 8px;
+}
+
+.escolhido {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--dourado);
+  border-radius: 8px;
+}
+
+.escolhido div,
+.resultados button {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.escolhido small,
+.resultados small,
+.ajuda {
+  font-family: var(--fonte-mono), monospace;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.resultados {
+  list-style: none;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid rgba(245, 240, 232, 0.12);
+  border-radius: 8px;
+}
+
+.resultados button {
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  color: var(--papel);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.resultados li + li {
+  border-top: 1px solid rgba(245, 240, 232, 0.08);
+}
+
+.resultados button:hover,
+.resultados button:focus {
+  outline: none;
+  background: rgba(245, 240, 232, 0.08);
+}
+
+.botoesFormulario {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+@media (max-width: 600px) {
+  .cabecalho {
+    padding: 16px;
+  }
+
+  .acoes,
+  .busca {
+    width: 100%;
+  }
+
+  .busca {
+    flex: 1 1 100%;
+  }
+
+  .topo > .faixaEdicao {
+    width: calc(100% - 32px);
+  }
+
+  .coluna {
+    padding: 8px 16px 40px;
+  }
+
+  .viagens {
+    padding-left: 0;
+  }
+}

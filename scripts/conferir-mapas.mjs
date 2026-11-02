@@ -24,6 +24,7 @@ const problemas = [];
 for (const v of visitas) {
   const pasta = PASTAS[v.pais_codigo];
   if (!pasta) { problemas.push(`${v.pais_codigo}: país sem mapa detalhado`); continue; }
+  if (!v.nivel1_codigo) continue; // visita só do país: não há o que achar no mapa detalhado
   const base = `public/geo/${pasta}`;
   const onde = `${v.pais_codigo} ${v.nivel2_nome}`;
   if (!codigos(`${base}/estados.json`)?.has(v.nivel1_codigo)) problemas.push(`${onde}: estado ${v.nivel1_codigo} não está no mapa`);
@@ -31,7 +32,7 @@ for (const v of visitas) {
   if (v.condado_codigo && condados && !condados.has(v.condado_codigo)) problemas.push(`${onde}: condado ${v.condado_codigo} não está no mapa`);
   // O Brasil (passo 2a) usa a sigla sem "BR-" no nome do arquivo: municipios-SP.json
   const sufixo = v.pais_codigo === "BR" ? v.nivel1_codigo.replace("BR-", "") : v.nivel1_codigo;
-  if (!codigos(`${base}/municipios-${sufixo}.json`)?.has(v.nivel2_codigo)) problemas.push(`${onde}: município ${v.nivel2_codigo} não está no mapa`);
+  if (v.nivel2_codigo && !codigos(`${base}/municipios-${sufixo}.json`)?.has(v.nivel2_codigo)) problemas.push(`${onde}: município ${v.nivel2_codigo} não está no mapa`);
 }
 
 const unicos = [...new Set(problemas)];
