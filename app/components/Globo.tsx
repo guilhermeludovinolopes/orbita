@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Map as Mapa,
+  Marker,
   setWorkerUrl,
   type ExpressionSpecification,
   type GeoJSONSource,
@@ -26,7 +27,8 @@ import {
   type Situacao,
   type Visita,
 } from "@/lib/visitas";
-import { MARAVILHAS, type Maravilha } from "@/lib/maravilhas";
+import type { Maravilha } from "@/lib/maravilhas";
+import { svgDaMiniatura } from "@/lib/miniaturas-maravilhas";
 import { DETALHE_PAISES } from "@/lib/detalhe-paises";
 import PainelBandeiras from "./PainelBandeiras";
 import FaixaMaravilhas from "./FaixaMaravilhas";
@@ -97,6 +99,7 @@ function partePrincipal(f: GeoJSON.Feature): GeoJSON.Feature {
 }
 
 const CODIGO_NUMERICO_REINO_UNIDO = "826";
+const TIPO_MARAVILHA = "maravilha do mundo";
 const LAT_MAX_MERCATOR = 85.0511287798;
 // Cantos do mundo inteiro em Web Mercator, para as imagens do mar e do relevo
 const CANTOS_MERCATOR: [[number, number], [number, number], [number, number], [number, number]] = [
@@ -201,6 +204,12 @@ export default function Globo() {
   const [visitados, setVisitados] = useState<Set<string>>(new Set());
   const [vistas, setVistas] = useState<Map<string, AtracaoVista>>(new Map());
   const irParaMaravilhaRef = useRef<(m: Maravilha) => void>(() => {});
+  const esconderMiniaturaRef = useRef<() => void>(() => {});
+
+  // A miniatura da Maravilha só fica no mapa enquanto ela é a selecionada
+  useEffect(() => {
+    if (selecionado?.tipo !== TIPO_MARAVILHA) esconderMiniaturaRef.current();
+  }, [selecionado]);
 
   useEffect(() => {
     const tela = ceu.current;
@@ -369,19 +378,38 @@ export default function Globo() {
       return atual.pais ? ["estados", "paises"] : ["paises"];
     }
 
-    // Contorno da área em foco e os pontos das Maravilhas sempre por cima das camadas novas
+    // Contorno da área em foco sempre por cima das camadas novas
     function trazerParaFrente() {
       mapa.moveLayer("foco");
-      if (mapa.getLayer("maravilhas")) mapa.moveLayer("maravilhas");
     }
+
+    // Miniatura da Maravilha selecionada, desenhada no lugar dela no mapa (só enquanto selecionada)
+    let miniatura: Marker | null = null;
+    function mostrarMiniatura(m: Maravilha, vista: boolean) {
+      esconderMiniatura();
+      // A caixa de fora é posicionada pelo mapa; a de dentro tem o desenho e a animação
+      const el = document.createElement("div");
+      const desenho = document.createElement("div");
+      desenho.className = `${estilos.miniatura} ${vista ? estilos.miniaturaVista : ""}`;
+      desenho.innerHTML = svgDaMiniatura(m.id);
+      desenho.title = m.nome;
+      el.appendChild(desenho);
+      miniatura = new Marker({ element: el, anchor: "bottom" }).setLngLat(m.ponto).addTo(mapa);
+    }
+    function esconderMiniatura() {
+      miniatura?.remove();
+      miniatura = null;
+    }
+    esconderMiniaturaRef.current = esconderMiniatura;
 
     function mostrarMaravilha(m: Maravilha) {
       const vista = atracoesVistas.get(m.id);
+      mostrarMiniatura(m, Boolean(vista));
       const resumo = vista?.ano
         ? { visitas: 1, lugares: 1, primeiroAno: vista.ano, ultimoAno: vista.ano, anos: [vista.ano] }
         : null;
       setSelecionado({
-        tipo: "maravilha do mundo",
+        tipo: TIPO_MARAVILHA,
         codigo: m.onde,
         nome: m.nome,
         situacao: vista ? "visitado" : null,
@@ -717,40 +745,10 @@ export default function Globo() {
       });
       mapa.on("mouseout", limparSobre);
 
-      // As 7 Maravilhas como pontos: dourados as vistas, claros as que faltam
       atracoesVistas = await atracoesCarregadas;
       setVistas(atracoesVistas);
-      mapa.addSource("maravilhas", {
-        type: "geojson",
-        data: {
-          type: "FeatureCollection",
-          features: MARAVILHAS.map((m) => ({
-            type: "Feature",
-            properties: { id: m.id, vista: atracoesVistas.has(m.id) },
-            geometry: { type: "Point", coordinates: m.ponto },
-          })),
-        },
-      });
-      mapa.addLayer({
-        id: "maravilhas",
-        type: "circle",
-        source: "maravilhas",
-        paint: {
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 1, 4, 6, 7, 10, 9],
-          "circle-color": ["case", ["get", "vista"], COR.completo, "#F5F0E8"],
-          "circle-stroke-color": COR.pelicula,
-          "circle-stroke-width": 1.5,
-        },
-      });
 
       mapa.on("click", (e) => {
-        // Uma Maravilha sob o clique tem prioridade sobre o país embaixo dela
-        const [ponto] = mapa.queryRenderedFeatures(e.point, { layers: ["maravilhas"] });
-        const maravilha = MARAVILHAS.find((m) => m.id === ponto?.properties?.id);
-        if (maravilha) {
-          girando = false;
-          return mostrarMaravilha(maravilha);
-        }
         const f = featureSob(e.point);
         const p = f?.properties;
         if (!f || !p?.codigo) return;

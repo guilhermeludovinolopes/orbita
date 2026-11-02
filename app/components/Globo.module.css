@@ -53,6 +53,52 @@
   border-radius: 12px;
 }
 
+/* Miniatura desenhada da Maravilha selecionada, presa no lugar dela no mapa */
+.miniatura {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  margin-bottom: 10px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(0, 15, 12, 0.92); /* Tinta */
+  border: 2px solid rgba(245, 240, 232, 0.7); /* Papel: ainda não vista */
+  color: #f5f0e8;
+  animation: surgir 0.35s ease-out;
+}
+
+.miniatura svg {
+  width: 54px;
+  height: 54px;
+}
+
+/* Ponta embaixo, apontando para o lugar exato */
+.miniatura::after {
+  content: "";
+  position: absolute;
+  bottom: -9px;
+  left: 50%;
+  border: 8px solid transparent;
+  border-bottom: 0;
+  border-top-color: inherit;
+  transform: translateX(-50%);
+}
+
+/* Vista: traço e borda dourados, com brilho */
+.miniaturaVista {
+  border-color: #e2b23a;
+  color: #e2b23a;
+  box-shadow: 0 0 16px rgba(246, 211, 107, 0.55);
+}
+
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.8);
+  }
+}
+
 /* Anos com visita, como pequenas etiquetas */
 .linhaDoTempo {
   list-style: none;
