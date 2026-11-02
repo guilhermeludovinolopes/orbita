@@ -18,6 +18,7 @@ import paises from "i18n-iso-countries";
 import pt from "i18n-iso-countries/langs/pt.json";
 import { carregarVisitas, resumir, situacao, type Resumo, type Situacao, type Visita } from "@/lib/visitas";
 import { DETALHE_PAISES } from "@/lib/detalhe-paises";
+import PainelBandeiras from "./PainelBandeiras";
 import estilos from "./Globo.module.css";
 
 paises.registerLocale(pt);
@@ -178,6 +179,8 @@ export default function Globo() {
   const [selecionado, setSelecionado] = useState<Selecionado | null>(null);
   const [nivel, setNivel] = useState<Nivel>({});
   const voltarRef = useRef<() => void>(() => {});
+  const irParaPaisRef = useRef<(codigo: string, nome: string) => void>(() => {});
+  const [visitados, setVisitados] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const tela = ceu.current;
@@ -241,7 +244,8 @@ export default function Globo() {
     });
 
     const atual: Nivel = {};
-    const padding = celular ? 24 : 80;
+    // No computador, a coluna de bandeiras ocupa a direita: o enquadramento deixa espaço para ela
+    const padding = celular ? 24 : { top: 80, bottom: 80, left: 80, right: 80 + 316 };
 
     // Adiciona (ou troca) uma camada de áreas: preenchimento por situação, divisas e destaque
     function mostrarCamada(camada: Camada, features: GeoJSON.Feature[]) {
@@ -485,6 +489,17 @@ export default function Globo() {
       mapa.flyTo({ center: onde, zoom: Math.max(mapa.getZoom(), 2.6), duration: 1200 });
     }
 
+    // Clique numa bandeira: vai até o país (entrando nele, se ele tiver mapa por estados)
+    irParaPaisRef.current = (codigo: string, nome: string) => {
+      girando = false;
+      if (DETALHE_PAISES[codigo] && contornosPaises.length) return void entrarNoPais(codigo, nome);
+      mostrarMundo();
+      const resumo = resumir(visitas.filter((v) => v.pais === codigo));
+      setSelecionado({ tipo: "país", codigo, nome, situacao: situacao(resumo), resumo, semDetalhe: true });
+      const contorno = contornosPaises.find((f) => f.properties?.codigo === codigo);
+      if (contorno) mapa.fitBounds(limitesDe([partePrincipal(contorno)]), { padding, maxZoom: 5, duration: 1400 });
+    };
+
     voltarRef.current = () => {
       if (atual.condado) {
         void entrarNoEstado(atual.estado!, atual.nomeEstado!, atual.totalEstado!);
@@ -508,6 +523,7 @@ export default function Globo() {
       }
       colecao.features.push(...(await nacoesReinoUnido).features);
       visitas = await visitasCarregadas;
+      setVisitados(new Set(visitas.map((v) => v.pais)));
       for (const f of colecao.features) {
         const codigo = f.properties!.codigo;
         const resumo = resumir(visitas.filter((v) => v.pais === codigo));
@@ -656,11 +672,17 @@ export default function Globo() {
         </nav>
       )}
 
-      <ul className={estilos.legenda}>
-        <li><span style={{ background: COR.naoVisitado }} />Não visitado</li>
-        <li><span style={{ background: COR.visitado }} />Visitado</li>
-        <li><span style={{ background: COR.completo }} />Completo</li>
-      </ul>
+      <PainelBandeiras
+        visitados={visitados}
+        aoEscolher={(codigo, nome) => irParaPaisRef.current(codigo, nome)}
+        legenda={
+          <ul className={estilos.legenda}>
+            <li><span style={{ background: COR.naoVisitado }} />Não visitado</li>
+            <li><span style={{ background: COR.visitado }} />Visitado</li>
+            <li><span style={{ background: COR.completo }} />Completo</li>
+          </ul>
+        }
+      />
 
       {selecionado && (
         <aside className={estilos.painel}>

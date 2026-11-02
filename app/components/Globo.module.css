@@ -12,17 +12,15 @@
   height: 100%;
 }
 
+/* Fica dentro da coluna de bandeiras, numa linha só */
 .legenda {
-  position: absolute;
-  right: 24px;
-  bottom: 24px;
   list-style: none;
   padding: 0;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px 14px;
   font-family: var(--fonte-mono), monospace;
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -139,12 +137,6 @@
   .painel {
     bottom: 16px;
     left: 16px;
-  }
-
-  .legenda {
-    right: 16px;
-    top: 64px;
-    bottom: auto;
   }
 
   .trilha {
