@@ -2,6 +2,7 @@
 
 import { MARAVILHAS, type Maravilha } from "@/lib/maravilhas";
 import type { AtracaoVista } from "@/lib/visitas";
+import GrupoRecolhivel from "./GrupoRecolhivel";
 import estilos from "./FaixaMaravilhas.module.css";
 
 type Props = {
@@ -9,14 +10,12 @@ type Props = {
   aoEscolher: (maravilha: Maravilha) => void;
 };
 
-// As 7 Maravilhas do Mundo, no topo da coluna da direita, com as que o Guilherme já viu em dourado
+// As 7 Maravilhas do Mundo, no topo da coluna da direita (fechadas até abrir pela setinha),
+// com as que o Guilherme já viu em dourado
 export default function FaixaMaravilhas({ vistas, aoEscolher }: Props) {
   const total = MARAVILHAS.filter((m) => vistas.has(m.id)).length;
   return (
-    <section className={estilos.faixa} aria-label="7 Maravilhas do Mundo">
-      <p className={estilos.titulo}>
-        7 Maravilhas <span>{total} de 7</span>
-      </p>
+    <GrupoRecolhivel titulo="7 Maravilhas" contador={`${total} de 7`}>
       <ul className={estilos.lista}>
         {MARAVILHAS.map((m) => {
           const vista = vistas.get(m.id);
@@ -34,6 +33,6 @@ export default function FaixaMaravilhas({ vistas, aoEscolher }: Props) {
           );
         })}
       </ul>
-    </section>
+    </GrupoRecolhivel>
   );
 }

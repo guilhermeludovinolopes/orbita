@@ -1,23 +1,4 @@
-/* Seção no topo da coluna da direita, acima das bandeiras */
-.faixa {
-  margin-top: 14px;
-}
-
-.titulo {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-family: var(--fonte-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  opacity: 0.9;
-}
-
-.titulo span {
-  color: var(--dourado);
-}
-
+/* Botões das 7 Maravilhas, dentro do grupo recolhível no topo da coluna da direita */
 .lista {
   list-style: none;
   padding: 0;

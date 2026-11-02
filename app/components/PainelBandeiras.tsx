@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import paisesMundo from "@/lib/paises-mundo.json";
+import GrupoRecolhivel from "./GrupoRecolhivel";
 import estilos from "./PainelBandeiras.module.css";
 
 type Pais = { codigo: string; nome: string; continente: string };
@@ -45,10 +46,7 @@ export default function PainelBandeiras({ visitados, aoEscolher, legenda, antesD
               .sort((a, b) => Number(visitados.has(b.codigo)) - Number(visitados.has(a.codigo)) || a.nome.localeCompare(b.nome, "pt-BR"));
             const vistos = doContinente.filter((p) => visitados.has(p.codigo)).length;
             return (
-              <section key={continente} className={estilos.continente}>
-                <h3 className={estilos.nomeContinente}>
-                  {continente} <span>{vistos} de {doContinente.length}</span>
-                </h3>
+              <GrupoRecolhivel key={continente} titulo={continente} contador={`${vistos} de ${doContinente.length}`}>
                 <ul className={estilos.grade}>
                   {doContinente.map((p) => (
                     <li key={p.codigo}>
@@ -66,7 +64,7 @@ export default function PainelBandeiras({ visitados, aoEscolher, legenda, antesD
                     </li>
                   ))}
                 </ul>
-              </section>
+              </GrupoRecolhivel>
             );
           })}
         </div>
