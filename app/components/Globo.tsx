@@ -30,7 +30,7 @@ import {
   type Visita,
 } from "@/lib/visitas";
 import type { Maravilha } from "@/lib/maravilhas";
-import { DETALHE_PAISES } from "@/lib/detalhe-paises";
+import { DETALHE_PAISES, temCondados } from "@/lib/detalhe-paises";
 import PainelBandeiras from "./PainelBandeiras";
 import FaixaMaravilhas from "./FaixaMaravilhas";
 import ListaLugares, { type ItemLugar } from "./ListaLugares";
@@ -379,7 +379,7 @@ export default function Globo() {
     // A camada mais funda visível é a que responde ao mouse
     function camadasAtivas(): Camada[] {
       if (atual.condado) return ["municipios", "condados", "estados", "paises"];
-      if (atual.estado) return DETALHE_PAISES[atual.pais!].condados ? ["condados", "estados", "paises"] : ["municipios", "estados", "paises"];
+      if (atual.estado) return temCondados(DETALHE_PAISES[atual.pais!], atual.estado) ? ["condados", "estados", "paises"] : ["municipios", "estados", "paises"];
       return atual.pais ? ["estados", "paises"] : ["paises"];
     }
 
@@ -526,7 +526,7 @@ export default function Globo() {
     async function entrarNoEstado(codigo: string, nome: string, total: number, mover = true) {
       const det = DETALHE_PAISES[atual.pais!];
       const doEstado = visitas.filter((v) => v.pais === atual.pais && v.nivel1 === codigo);
-      const comCondados = Boolean(det.condados);
+      const comCondados = temCondados(det, codigo);
       const [geo, geoEstados] = await Promise.all([
         buscarGeo(comCondados ? det.condados!(codigo) : det.municipios(codigo)),
         buscarGeo(det.estados),
@@ -585,7 +585,7 @@ export default function Globo() {
         situacao: situacao(resumo, total),
         resumo,
         contagem: contar(resumo?.lugares ?? 0, total, det.nomes.municipio),
-        dica: total ? dica(det.nomes.municipio) : `Este ${det.nomes.condado![0]} não tem ${det.nomes.municipio[1]} oficiais.`,
+        dica: total ? dica(det.nomes.municipio) : `Este ${det.nomes.condado![0]} não tem ${det.nomes.municipio[1]} no mapa oficial.`,
         nomeMunicipios: det.nomes.municipio[1],
         filhos: listar(municipios, (c) => doCondado.filter((v) => v.municipio === c), "municipio"),
         tituloFilhos: det.nomes.municipio[1],
