@@ -1,0 +1,59 @@
+/* Seção no topo da coluna da direita, acima das bandeiras */
+.faixa {
+  margin-top: 14px;
+}
+
+.titulo {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-family: var(--fonte-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.titulo span {
+  color: var(--dourado);
+}
+
+.lista {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.maravilha {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  background: none;
+  border: 1px solid rgba(245, 240, 232, 0.18);
+  border-radius: 999px;
+  color: var(--papel);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  opacity: 0.55;
+}
+
+.maravilha:hover {
+  opacity: 0.9;
+}
+
+.marca {
+  font-size: 11px;
+}
+
+/* Vista: dourada e acesa */
+.vista {
+  opacity: 1;
+  border-color: #e2b23a;
+  color: #f6d36b;
+  box-shadow: 0 0 6px rgba(246, 211, 107, 0.4);
+}

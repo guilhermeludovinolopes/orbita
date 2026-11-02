@@ -16,9 +16,20 @@ import { feature } from "topojson-client";
 import type { Topology } from "topojson-specification";
 import paises from "i18n-iso-countries";
 import pt from "i18n-iso-countries/langs/pt.json";
-import { carregarVisitas, resumir, situacao, type Resumo, type Situacao, type Visita } from "@/lib/visitas";
+import {
+  carregarAtracoesVistas,
+  carregarVisitas,
+  resumir,
+  situacao,
+  type AtracaoVista,
+  type Resumo,
+  type Situacao,
+  type Visita,
+} from "@/lib/visitas";
+import { MARAVILHAS, type Maravilha } from "@/lib/maravilhas";
 import { DETALHE_PAISES } from "@/lib/detalhe-paises";
 import PainelBandeiras from "./PainelBandeiras";
+import FaixaMaravilhas from "./FaixaMaravilhas";
 import ListaLugares, { type ItemLugar } from "./ListaLugares";
 import estilos from "./Globo.module.css";
 
@@ -188,6 +199,8 @@ export default function Globo() {
   const irParaPaisRef = useRef<(codigo: string, nome: string) => void>(() => {});
   const abrirFilhoRef = useRef<(f: Filho) => void>(() => {});
   const [visitados, setVisitados] = useState<Set<string>>(new Set());
+  const [vistas, setVistas] = useState<Map<string, AtracaoVista>>(new Map());
+  const irParaMaravilhaRef = useRef<(m: Maravilha) => void>(() => {});
 
   useEffect(() => {
     const tela = ceu.current;
@@ -249,6 +262,8 @@ export default function Globo() {
       console.error("Não consegui carregar as visitas", erro);
       return [];
     });
+    let atracoesVistas = new Map<string, AtracaoVista>();
+    const atracoesCarregadas = carregarAtracoesVistas().catch(() => new Map<string, AtracaoVista>());
 
     const atual: Nivel = {};
     // No computador, a coluna de bandeiras ocupa a direita: o enquadramento deixa espaço para ela
@@ -354,6 +369,36 @@ export default function Globo() {
       return atual.pais ? ["estados", "paises"] : ["paises"];
     }
 
+    // Contorno da área em foco e os pontos das Maravilhas sempre por cima das camadas novas
+    function trazerParaFrente() {
+      mapa.moveLayer("foco");
+      if (mapa.getLayer("maravilhas")) mapa.moveLayer("maravilhas");
+    }
+
+    function mostrarMaravilha(m: Maravilha) {
+      const vista = atracoesVistas.get(m.id);
+      const resumo = vista?.ano
+        ? { visitas: 1, lugares: 1, primeiroAno: vista.ano, ultimoAno: vista.ano, anos: [vista.ano] }
+        : null;
+      setSelecionado({
+        tipo: "maravilha do mundo",
+        codigo: m.onde,
+        nome: m.nome,
+        situacao: vista ? "visitado" : null,
+        resumo,
+        folha: true,
+        dica: vista?.observacao ?? undefined,
+      });
+    }
+
+    // Clique na faixa das Maravilhas: volta ao globo e voa até a maravilha
+    irParaMaravilhaRef.current = (m: Maravilha) => {
+      girando = false;
+      mostrarMundo();
+      mostrarMaravilha(m);
+      mapa.flyTo({ center: m.ponto, zoom: 5, duration: 1600 });
+    };
+
     function featureSob(ponto: PointLike): MapGeoJSONFeature | undefined {
       const [f] = mapa.queryRenderedFeatures(ponto, { layers: camadasAtivas().filter((c) => mapa.getLayer(c)) });
       return f;
@@ -420,7 +465,7 @@ export default function Globo() {
       sairDosNiveis("estado");
       focar(codigo);
       mostrarCamada("estados", estados);
-      mapa.moveLayer("foco"); // contorno do país por cima das divisas dos estados
+      trazerParaFrente(); // contorno do país por cima das divisas dos estados
       Object.assign(atual, { pais: codigo, nomePais: nome });
       setNivel({ ...atual });
 
@@ -460,7 +505,7 @@ export default function Globo() {
         mostrarCamada("municipios", marcar(geo.features, (c) => doEstado.filter((v) => v.municipio === c), false));
         municipiosAbertos = geo.features;
       }
-      mapa.moveLayer("foco"); // contorno do estado por cima das divisas de dentro dele
+      trazerParaFrente(); // contorno do estado por cima das divisas de dentro dele
       Object.assign(atual, { estado: codigo, nomeEstado: nome, totalEstado: total });
       setNivel({ ...atual });
 
@@ -493,7 +538,7 @@ export default function Globo() {
       if (condado) focarArea("condados", condado);
       mostrarCamada("municipios", marcar(municipios, (c) => doCondado.filter((v) => v.municipio === c), false));
       municipiosAbertos = municipios;
-      mapa.moveLayer("foco");
+      trazerParaFrente();
       Object.assign(atual, { condado: codigo, nomeCondado: nome });
       setNivel({ ...atual });
 
@@ -672,7 +717,40 @@ export default function Globo() {
       });
       mapa.on("mouseout", limparSobre);
 
+      // As 7 Maravilhas como pontos: dourados as vistas, claros as que faltam
+      atracoesVistas = await atracoesCarregadas;
+      setVistas(atracoesVistas);
+      mapa.addSource("maravilhas", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: MARAVILHAS.map((m) => ({
+            type: "Feature",
+            properties: { id: m.id, vista: atracoesVistas.has(m.id) },
+            geometry: { type: "Point", coordinates: m.ponto },
+          })),
+        },
+      });
+      mapa.addLayer({
+        id: "maravilhas",
+        type: "circle",
+        source: "maravilhas",
+        paint: {
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 1, 4, 6, 7, 10, 9],
+          "circle-color": ["case", ["get", "vista"], COR.completo, "#F5F0E8"],
+          "circle-stroke-color": COR.pelicula,
+          "circle-stroke-width": 1.5,
+        },
+      });
+
       mapa.on("click", (e) => {
+        // Uma Maravilha sob o clique tem prioridade sobre o país embaixo dela
+        const [ponto] = mapa.queryRenderedFeatures(e.point, { layers: ["maravilhas"] });
+        const maravilha = MARAVILHAS.find((m) => m.id === ponto?.properties?.id);
+        if (maravilha) {
+          girando = false;
+          return mostrarMaravilha(maravilha);
+        }
         const f = featureSob(e.point);
         const p = f?.properties;
         if (!f || !p?.codigo) return;
@@ -719,6 +797,7 @@ export default function Globo() {
       )}
 
       <PainelBandeiras
+        antesDosPaises={<FaixaMaravilhas vistas={vistas} aoEscolher={(m) => irParaMaravilhaRef.current(m)} />}
         visitados={visitados}
         aoEscolher={(codigo, nome) => irParaPaisRef.current(codigo, nome)}
         legenda={

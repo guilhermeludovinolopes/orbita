@@ -12,10 +12,11 @@ type Props = {
   visitados: Set<string>;
   aoEscolher: (codigo: string, nome: string) => void;
   legenda: React.ReactNode;
+  antesDosPaises?: React.ReactNode; // seção no topo da lista (as 7 Maravilhas)
 };
 
 // Coluna da direita: todas as bandeiras do mundo, com as dos países visitados em destaque
-export default function PainelBandeiras({ visitados, aoEscolher, legenda }: Props) {
+export default function PainelBandeiras({ visitados, aoEscolher, legenda, antesDosPaises }: Props) {
   const [aberto, setAberto] = useState(false); // só usado no celular, onde a coluna vira uma gaveta
   const paises = paisesMundo as Pais[];
   const totalVisitados = paises.filter((p) => visitados.has(p.codigo)).length;
@@ -36,6 +37,7 @@ export default function PainelBandeiras({ visitados, aoEscolher, legenda }: Prop
         <div className={estilos.legenda}>{legenda}</div>
 
         <div className={estilos.lista}>
+          {antesDosPaises}
           {CONTINENTES.map((continente) => {
             // Visitados primeiro, depois em ordem alfabética
             const doContinente = paises

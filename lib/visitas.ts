@@ -36,6 +36,22 @@ export async function carregarVisitas(): Promise<Visita[]> {
   }));
 }
 
+export type AtracaoVista = { ano: number | null; observacao: string | null };
+
+// Atrações (7 Maravilhas, depois UNESCO) que o Guilherme marcou como vistas.
+// Se a tabela ainda não existir no banco, devolve vazio em vez de quebrar o globo.
+export async function carregarAtracoesVistas(): Promise<Map<string, AtracaoVista>> {
+  const { data, error } = await obterSupabase()
+    .from("atracoes_visitadas")
+    .select("atracao_id, ano, observacao, perfis!inner(usuario)")
+    .eq("perfis.usuario", PERFIL_DO_SITE);
+  if (error) {
+    console.error("Não consegui carregar as atrações vistas", error);
+    return new Map();
+  }
+  return new Map(data.map((a) => [a.atracao_id, { ano: a.ano, observacao: a.observacao }]));
+}
+
 export function resumir(visitas: Visita[]): Resumo | null {
   if (visitas.length === 0) return null;
   const anos = [...new Set(visitas.map((v) => v.ano))].sort((a, b) => a - b);
