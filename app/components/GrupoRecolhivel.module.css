@@ -1,0 +1,56 @@
+.grupo {
+  border-bottom: 1px solid rgba(245, 240, 232, 0.08);
+}
+
+/* Título e contador sempre na mesma linha: o título encurta com "…" se faltar espaço */
+.cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 2px;
+  background: none;
+  border: none;
+  color: var(--papel);
+  font-family: var(--fonte-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.01em; /* apertado para "América do Norte e Central · 1 de 23" caber numa linha */
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cabecalho:hover .titulo {
+  opacity: 1;
+}
+
+.seta {
+  flex-shrink: 0;
+  width: 10px;
+  font-size: 10px;
+  color: var(--dourado);
+  transition: transform 0.15s;
+}
+
+.setaAberta {
+  transform: rotate(90deg);
+}
+
+.titulo {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+
+.contador {
+  flex-shrink: 0;
+  white-space: nowrap;
+  color: var(--dourado);
+}
+
+.conteudo {
+  padding: 2px 0 12px;
+}

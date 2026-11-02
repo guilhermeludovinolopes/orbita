@@ -1,0 +1,40 @@
+/* Botões das 7 Maravilhas, dentro do grupo recolhível no topo da coluna da direita */
+.lista {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.maravilha {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  background: none;
+  border: 1px solid rgba(245, 240, 232, 0.18);
+  border-radius: 999px;
+  color: var(--papel);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  opacity: 0.55;
+}
+
+.maravilha:hover {
+  opacity: 0.9;
+}
+
+.marca {
+  font-size: 11px;
+}
+
+/* Vista: dourada e acesa */
+.vista {
+  opacity: 1;
+  border-color: #e2b23a;
+  color: #f6d36b;
+  box-shadow: 0 0 6px rgba(246, 211, 107, 0.4);
+}

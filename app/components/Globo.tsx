@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Map as Mapa,
+  Marker,
   setWorkerUrl,
   type ExpressionSpecification,
   type GeoJSONSource,
@@ -16,9 +17,20 @@ import { feature } from "topojson-client";
 import type { Topology } from "topojson-specification";
 import paises from "i18n-iso-countries";
 import pt from "i18n-iso-countries/langs/pt.json";
-import { carregarVisitas, resumir, situacao, type Resumo, type Situacao, type Visita } from "@/lib/visitas";
+import {
+  carregarAtracoesVistas,
+  carregarVisitas,
+  resumir,
+  situacao,
+  type AtracaoVista,
+  type Resumo,
+  type Situacao,
+  type Visita,
+} from "@/lib/visitas";
+import type { Maravilha } from "@/lib/maravilhas";
 import { DETALHE_PAISES } from "@/lib/detalhe-paises";
 import PainelBandeiras from "./PainelBandeiras";
+import FaixaMaravilhas from "./FaixaMaravilhas";
 import ListaLugares, { type ItemLugar } from "./ListaLugares";
 import estilos from "./Globo.module.css";
 
@@ -86,6 +98,7 @@ function partePrincipal(f: GeoJSON.Feature): GeoJSON.Feature {
 }
 
 const CODIGO_NUMERICO_REINO_UNIDO = "826";
+const TIPO_MARAVILHA = "maravilha do mundo";
 const LAT_MAX_MERCATOR = 85.0511287798;
 // Cantos do mundo inteiro em Web Mercator, para as imagens do mar e do relevo
 const CANTOS_MERCATOR: [[number, number], [number, number], [number, number], [number, number]] = [
@@ -188,6 +201,14 @@ export default function Globo() {
   const irParaPaisRef = useRef<(codigo: string, nome: string) => void>(() => {});
   const abrirFilhoRef = useRef<(f: Filho) => void>(() => {});
   const [visitados, setVisitados] = useState<Set<string>>(new Set());
+  const [vistas, setVistas] = useState<Map<string, AtracaoVista>>(new Map());
+  const irParaMaravilhaRef = useRef<(m: Maravilha) => void>(() => {});
+  const esconderMiniaturaRef = useRef<() => void>(() => {});
+
+  // A miniatura da Maravilha só fica no mapa enquanto ela é a selecionada
+  useEffect(() => {
+    if (selecionado?.tipo !== TIPO_MARAVILHA) esconderMiniaturaRef.current();
+  }, [selecionado]);
 
   useEffect(() => {
     const tela = ceu.current;
@@ -249,6 +270,8 @@ export default function Globo() {
       console.error("Não consegui carregar as visitas", erro);
       return [];
     });
+    let atracoesVistas = new Map<string, AtracaoVista>();
+    const atracoesCarregadas = carregarAtracoesVistas().catch(() => new Map<string, AtracaoVista>());
 
     const atual: Nivel = {};
     // No computador, a coluna de bandeiras ocupa a direita: o enquadramento deixa espaço para ela
@@ -354,6 +377,55 @@ export default function Globo() {
       return atual.pais ? ["estados", "paises"] : ["paises"];
     }
 
+    // Contorno da área em foco sempre por cima das camadas novas
+    function trazerParaFrente() {
+      mapa.moveLayer("foco");
+    }
+
+    // Miniatura da Maravilha selecionada, desenhada no lugar dela no mapa (só enquanto selecionada)
+    let miniatura: Marker | null = null;
+    function mostrarMiniatura(m: Maravilha, vista: boolean) {
+      esconderMiniatura();
+      // A caixa de fora é posicionada pelo mapa; a de dentro tem a ilustração e a animação
+      const el = document.createElement("div");
+      const desenho = document.createElement("div");
+      desenho.className = `${estilos.miniatura} ${vista ? estilos.miniaturaVista : ""}`;
+      desenho.style.backgroundImage = `url(${m.imagem})`;
+      desenho.title = m.nome;
+      el.appendChild(desenho);
+      miniatura = new Marker({ element: el, anchor: "bottom" }).setLngLat(m.ponto).addTo(mapa);
+    }
+    function esconderMiniatura() {
+      miniatura?.remove();
+      miniatura = null;
+    }
+    esconderMiniaturaRef.current = esconderMiniatura;
+
+    function mostrarMaravilha(m: Maravilha) {
+      const vista = atracoesVistas.get(m.id);
+      mostrarMiniatura(m, Boolean(vista));
+      const resumo = vista?.ano
+        ? { visitas: 1, lugares: 1, primeiroAno: vista.ano, ultimoAno: vista.ano, anos: [vista.ano] }
+        : null;
+      setSelecionado({
+        tipo: TIPO_MARAVILHA,
+        codigo: m.onde,
+        nome: m.nome,
+        situacao: vista ? "visitado" : null,
+        resumo,
+        folha: true,
+        dica: vista?.observacao ?? undefined,
+      });
+    }
+
+    // Clique na faixa das Maravilhas: volta ao globo e voa até a maravilha
+    irParaMaravilhaRef.current = (m: Maravilha) => {
+      girando = false;
+      mostrarMundo();
+      mostrarMaravilha(m);
+      mapa.flyTo({ center: m.ponto, zoom: 5, duration: 1600 });
+    };
+
     function featureSob(ponto: PointLike): MapGeoJSONFeature | undefined {
       const [f] = mapa.queryRenderedFeatures(ponto, { layers: camadasAtivas().filter((c) => mapa.getLayer(c)) });
       return f;
@@ -420,7 +492,7 @@ export default function Globo() {
       sairDosNiveis("estado");
       focar(codigo);
       mostrarCamada("estados", estados);
-      mapa.moveLayer("foco"); // contorno do país por cima das divisas dos estados
+      trazerParaFrente(); // contorno do país por cima das divisas dos estados
       Object.assign(atual, { pais: codigo, nomePais: nome });
       setNivel({ ...atual });
 
@@ -460,7 +532,7 @@ export default function Globo() {
         mostrarCamada("municipios", marcar(geo.features, (c) => doEstado.filter((v) => v.municipio === c), false));
         municipiosAbertos = geo.features;
       }
-      mapa.moveLayer("foco"); // contorno do estado por cima das divisas de dentro dele
+      trazerParaFrente(); // contorno do estado por cima das divisas de dentro dele
       Object.assign(atual, { estado: codigo, nomeEstado: nome, totalEstado: total });
       setNivel({ ...atual });
 
@@ -493,7 +565,7 @@ export default function Globo() {
       if (condado) focarArea("condados", condado);
       mostrarCamada("municipios", marcar(municipios, (c) => doCondado.filter((v) => v.municipio === c), false));
       municipiosAbertos = municipios;
-      mapa.moveLayer("foco");
+      trazerParaFrente();
       Object.assign(atual, { condado: codigo, nomeCondado: nome });
       setNivel({ ...atual });
 
@@ -672,6 +744,9 @@ export default function Globo() {
       });
       mapa.on("mouseout", limparSobre);
 
+      atracoesVistas = await atracoesCarregadas;
+      setVistas(atracoesVistas);
+
       mapa.on("click", (e) => {
         const f = featureSob(e.point);
         const p = f?.properties;
@@ -719,6 +794,7 @@ export default function Globo() {
       )}
 
       <PainelBandeiras
+        antesDosPaises={<FaixaMaravilhas vistas={vistas} aoEscolher={(m) => irParaMaravilhaRef.current(m)} />}
         visitados={visitados}
         aoEscolher={(codigo, nome) => irParaPaisRef.current(codigo, nome)}
         legenda={

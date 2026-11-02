@@ -53,6 +53,49 @@
   border-radius: 12px;
 }
 
+/* Ilustração da Maravilha selecionada (feita pelo Guilherme), presa no lugar dela no mapa.
+   A imagem é recortada no círculo dourado dela, que ocupa ~63% da largura do arquivo. */
+.miniatura {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  margin-bottom: 12px;
+  border-radius: 50%;
+  background-color: #f5f0e8; /* Papel, o fundo das ilustrações */
+  background-size: 152%;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  /* Ainda não vista: um pouco apagada */
+  filter: saturate(0.4) brightness(0.92);
+  animation: surgir 0.35s ease-out;
+}
+
+/* Ponta embaixo, apontando para o lugar exato */
+.miniatura::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  border: 9px solid transparent;
+  border-bottom: 0;
+  border-top-color: #f5f0e8;
+  transform: translateX(-50%);
+}
+
+/* Vista: em cores, com anel e brilho dourados */
+.miniaturaVista {
+  filter: none;
+  box-shadow: 0 0 0 3px #e2b23a, 0 0 22px rgba(246, 211, 107, 0.7);
+}
+
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.8);
+  }
+}
+
 /* Anos com visita, como pequenas etiquetas */
 .linhaDoTempo {
   list-style: none;
