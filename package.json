@@ -25,12 +25,14 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/topojson-client": "^3.1.5",
+    "flag-icons": "^7.6.0",
     "jpeg-js": "^0.4.4",
     "pngjs": "^7.0.0",
     "polygon-clipping": "^0.15.7",
     "proj4": "^2.15.0",
     "shapefile": "^0.6.6",
     "typescript": "^5.9",
-    "utif": "^3.1.0"
+    "utif": "^3.1.0",
+    "world-countries": "^5.1.0"
   }
 }

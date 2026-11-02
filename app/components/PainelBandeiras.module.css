@@ -1,0 +1,147 @@
+.coluna {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  bottom: 16px;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 15, 12, 0.88); /* Tinta */
+  border: 1px solid rgba(245, 240, 232, 0.12);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.topo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 18px 20px 8px;
+}
+
+.titulo {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.contador {
+  font-family: var(--fonte-mono), monospace;
+  font-size: 13px;
+  color: var(--dourado);
+}
+
+.legenda {
+  padding: 0 20px 12px;
+  border-bottom: 1px solid rgba(245, 240, 232, 0.1);
+}
+
+.lista {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 20px 20px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 240, 232, 0.25) transparent;
+}
+
+.continente {
+  margin-top: 14px;
+}
+
+.nomeContinente {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-family: var(--fonte-mono), monospace;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.nomeContinente span {
+  color: var(--dourado);
+}
+
+.grade {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.bandeira {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+  /* Não visitado: apagado */
+  filter: grayscale(1);
+  opacity: 0.35;
+  transition: opacity 0.15s, filter 0.15s, transform 0.15s;
+}
+
+.bandeira img {
+  width: 100%;
+  height: auto;
+  border-radius: 2px;
+}
+
+.bandeira:hover {
+  opacity: 0.8;
+  filter: grayscale(0.3);
+}
+
+/* Visitado: em cores, com contorno dourado */
+.visitado {
+  filter: none;
+  opacity: 1;
+  border-color: #e2b23a;
+  box-shadow: 0 0 6px rgba(246, 211, 107, 0.55);
+}
+
+.visitado:hover {
+  opacity: 1;
+  filter: none;
+  transform: scale(1.08);
+}
+
+.alternar {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .coluna {
+    top: 64px;
+    left: 16px;
+    width: auto;
+    transform: translateX(110%);
+    transition: transform 0.25s;
+    z-index: 2;
+  }
+
+  .aberta {
+    transform: none;
+  }
+
+  .alternar {
+    display: block;
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 3;
+    padding: 8px 14px;
+    background: var(--tinta);
+    color: var(--papel);
+    border: 1px solid rgba(245, 240, 232, 0.25);
+    border-radius: 999px;
+    font: inherit;
+    font-size: 14px;
+  }
+}
