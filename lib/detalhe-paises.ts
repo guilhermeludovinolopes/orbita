@@ -61,6 +61,11 @@ export const DETALHE_PAISES: Record<string, DetalhePais> = {
     semCondado: ["AR-C", "AR-B", "AR-M", "AR-J", "AR-F"],
     ...arquivos("ar", true),
   },
+  CL: {
+    totalMunicipios: 345, // as 346 comunas oficiais menos a Antártica (no globo ela é a Antártida)
+    nomes: { estado: ["região", "regiões", "uma"], condado: ["província", "províncias", "uma"], municipio: ["comuna", "comunas", "uma"] },
+    ...arquivos("cl", true),
+  },
   IE: {
     totalMunicipios: 31,
     nomes: { estado: ["província", "províncias", "uma"], condado: ["condado", "condados", "um"], municipio: ["prefeitura", "prefeituras", "uma"] },
