@@ -9,8 +9,12 @@ export type DetalhePais = {
   nomes: { estado: Nome; condado?: Nome; municipio: Nome };
   estados: string;
   condados?: (estado: string) => string; // só onde existe o nível intermediário
+  semCondado?: string[]; // estados do país em que os municípios ficam direto no estado
   municipios: (estado: string) => string; // municípios de um estado (com "condado" quando houver)
 };
+
+// O estado tem o nível intermediário (condado, província, departamento...)?
+export const temCondados = (det: DetalhePais, estado: string) => Boolean(det.condados) && !det.semCondado?.includes(estado);
 
 const arquivos = (pasta: string, comCondados: boolean) => ({
   estados: `/geo/${pasta}/estados.json`,
@@ -49,6 +53,13 @@ export const DETALHE_PAISES: Record<string, DetalhePais> = {
     totalMunicipios: 264, // distritos, com Londres contando como 1
     nomes: { estado: ["região", "regiões", "uma"], municipio: ["distrito", "distritos", "um"] },
     ...arquivos("gb-eng", false),
+  },
+  AR: {
+    totalMunicipios: 2093, // municípios, comunas e juntas com contorno no IGN (2.313 governos locais no INDEC 2022)
+    nomes: { estado: ["província", "províncias", "uma"], condado: ["departamento", "departamentos", "um"], municipio: ["município", "municípios", "um"] },
+    // Cidade Autônoma, partidos de Buenos Aires, e Mendoza, San Juan e La Rioja: o departamento é o próprio município
+    semCondado: ["AR-C", "AR-B", "AR-M", "AR-J", "AR-F"],
+    ...arquivos("ar", true),
   },
   IE: {
     totalMunicipios: 31,
