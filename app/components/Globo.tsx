@@ -19,6 +19,7 @@ import pt from "i18n-iso-countries/langs/pt.json";
 import { carregarVisitas, resumir, situacao, type Resumo, type Situacao, type Visita } from "@/lib/visitas";
 import { DETALHE_PAISES } from "@/lib/detalhe-paises";
 import PainelBandeiras from "./PainelBandeiras";
+import ListaLugares, { type ItemLugar } from "./ListaLugares";
 import estilos from "./Globo.module.css";
 
 paises.registerLocale(pt);
@@ -150,7 +151,12 @@ type Selecionado = {
   nomeMunicipios?: string; // para o texto do dourado: "todos os comuni"
   folha?: boolean; // último nível (município): mostra os anos
   semDetalhe?: boolean; // país ainda sem mapa por estados
+  filhos?: Filho[]; // o que há dentro: estados do país, condados ou municípios do estado...
+  tituloFilhos?: string; // "estados", "províncias", "municípios"...
 };
+
+// Um item da lista do painel: um estado, condado ou município dentro da área aberta
+type Filho = ItemLugar;
 
 const plural = (n: number, um: string, varios: string) => `${n.toLocaleString("pt-BR")} ${n === 1 ? um : varios}`;
 
@@ -180,6 +186,7 @@ export default function Globo() {
   const [nivel, setNivel] = useState<Nivel>({});
   const voltarRef = useRef<() => void>(() => {});
   const irParaPaisRef = useRef<(codigo: string, nome: string) => void>(() => {});
+  const abrirFilhoRef = useRef<(f: Filho) => void>(() => {});
   const [visitados, setVisitados] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -387,6 +394,24 @@ export default function Globo() {
       setNivel({});
     }
 
+    // Itens da lista do painel (estados, condados ou municípios dentro da área aberta)
+    function listar(features: GeoJSON.Feature[], visitasDe: (codigo: string) => Visita[], tipo: Filho["tipo"]): Filho[] {
+      return features.map((f) => {
+        const doItem = visitasDe(f.properties!.codigo);
+        return {
+          tipo,
+          codigo: f.properties!.codigo,
+          nome: f.properties!.nome,
+          total: f.properties!.total,
+          visitados: new Set(doItem.map((v) => v.municipio)).size,
+          anos: [...new Set(doItem.map((v) => v.ano))].sort((a, b) => a - b),
+        };
+      });
+    }
+
+    // Municípios mostrados no mapa agora: usados para enquadrar um município clicado na lista
+    let municipiosAbertos: GeoJSON.Feature[] = [];
+
     async function entrarNoPais(codigo: string, nome: string) {
       const det = DETALHE_PAISES[codigo];
       const doPais = visitas.filter((v) => v.pais === codigo);
@@ -410,6 +435,8 @@ export default function Globo() {
         contagem: `${contar(visitados, estados.length, det.nomes.estado)} · ${contar(resumo?.lugares ?? 0, det.totalMunicipios, det.nomes.municipio)}`,
         dica: dica(det.nomes.estado),
         nomeMunicipios: det.nomes.municipio[1],
+        filhos: listar(geo.features, (c) => doPais.filter((v) => v.nivel1 === c), "estado"),
+        tituloFilhos: det.nomes.estado[1],
       });
       // Enquadra a parte principal do país (sem ilhas e territórios distantes)
       const contorno = contornosPaises.find((f) => f.properties?.codigo === codigo);
@@ -429,7 +456,10 @@ export default function Globo() {
       const estado = geoEstados.features.find((f) => f.properties?.codigo === codigo);
       if (estado) focarArea("estados", estado);
       if (comCondados) mostrarCamada("condados", marcar(geo.features, (c) => doEstado.filter((v) => v.condado === c), true));
-      else mostrarCamada("municipios", marcar(geo.features, (c) => doEstado.filter((v) => v.municipio === c), false));
+      else {
+        mostrarCamada("municipios", marcar(geo.features, (c) => doEstado.filter((v) => v.municipio === c), false));
+        municipiosAbertos = geo.features;
+      }
       mapa.moveLayer("foco"); // contorno do estado por cima das divisas de dentro dele
       Object.assign(atual, { estado: codigo, nomeEstado: nome, totalEstado: total });
       setNivel({ ...atual });
@@ -446,6 +476,10 @@ export default function Globo() {
         contagem: contagens.join(" · "),
         dica: dica(comCondados ? det.nomes.condado! : det.nomes.municipio),
         nomeMunicipios: det.nomes.municipio[1],
+        filhos: comCondados
+          ? listar(geo.features, (c) => doEstado.filter((v) => v.condado === c), "condado")
+          : listar(geo.features, (c) => doEstado.filter((v) => v.municipio === c), "municipio"),
+        tituloFilhos: (comCondados ? det.nomes.condado! : det.nomes.municipio)[1],
       });
       mapa.fitBounds(limitesDe(geo.features), { padding, duration: 1400 });
     }
@@ -458,6 +492,7 @@ export default function Globo() {
       const condado = geoCondados.features.find((f) => f.properties?.codigo === codigo);
       if (condado) focarArea("condados", condado);
       mostrarCamada("municipios", marcar(municipios, (c) => doCondado.filter((v) => v.municipio === c), false));
+      municipiosAbertos = municipios;
       mapa.moveLayer("foco");
       Object.assign(atual, { condado: codigo, nomeCondado: nome });
       setNivel({ ...atual });
@@ -472,6 +507,8 @@ export default function Globo() {
         contagem: contar(resumo?.lugares ?? 0, total, det.nomes.municipio),
         dica: total ? dica(det.nomes.municipio) : `Este ${det.nomes.condado![0]} não tem ${det.nomes.municipio[1]} oficiais.`,
         nomeMunicipios: det.nomes.municipio[1],
+        filhos: listar(municipios, (c) => doCondado.filter((v) => v.municipio === c), "municipio"),
+        tituloFilhos: det.nomes.municipio[1],
       });
       // Condado sem cidades (só área rural): enquadra o próprio condado
       mapa.fitBounds(limitesDe(municipios.length ? municipios : condado ? [condado] : []), { padding, duration: 1400 });
@@ -490,6 +527,15 @@ export default function Globo() {
     }
 
     // Clique numa bandeira: vai até o país (entrando nele, se ele tiver mapa por estados)
+    // Clique num item da lista do painel: entra no estado/condado, ou mostra o município
+    abrirFilhoRef.current = (f: Filho) => {
+      if (f.tipo === "estado") return void entrarNoEstado(f.codigo, f.nome, f.total ?? 0);
+      if (f.tipo === "condado") return void entrarNoCondado(f.codigo, f.nome, f.total ?? 0);
+      mostrarMunicipio(f.codigo, f.nome);
+      const forma = municipiosAbertos.find((m) => m.properties?.codigo === f.codigo);
+      if (forma) mapa.fitBounds(limitesDe([forma]), { padding, maxZoom: 11, duration: 1200 });
+    };
+
     irParaPaisRef.current = (codigo: string, nome: string) => {
       girando = false;
       if (DETALHE_PAISES[codigo] && contornosPaises.length) return void entrarNoPais(codigo, nome);
@@ -696,7 +742,22 @@ export default function Globo() {
           <p className={estilos.situacao}>{textoSituacao(selecionado)}</p>
           {selecionado.contagem && <p className={estilos.detalhe}>{selecionado.contagem}</p>}
           {selecionado.resumo && <p className={estilos.detalhe}>{detalhe(selecionado.resumo, selecionado.folha)}</p>}
-          {selecionado.folha && selecionado.resumo && <p className={estilos.anos}>{selecionado.resumo.anos.join(" · ")}</p>}
+          {/* Linha do tempo: os anos em que você esteve aqui */}
+          {selecionado.resumo && (
+            <ul className={estilos.linhaDoTempo} aria-label="Anos com visita">
+              {selecionado.resumo.anos.map((ano) => (
+                <li key={ano}>{ano}</li>
+              ))}
+            </ul>
+          )}
+          {selecionado.filhos && selecionado.tituloFilhos && (
+            <ListaLugares
+              key={`${selecionado.tipo}-${selecionado.codigo}`}
+              titulo={selecionado.tituloFilhos}
+              itens={selecionado.filhos}
+              aoAbrir={(item) => abrirFilhoRef.current(item)}
+            />
+          )}
           {selecionado.semDetalhe && <p className={estilos.nota}>Em breve: o mapa por estados e municípios.</p>}
           {selecionado.dica && <p className={estilos.nota}>{selecionado.dica}</p>}
         </aside>
