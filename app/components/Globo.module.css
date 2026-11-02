@@ -53,43 +53,40 @@
   border-radius: 12px;
 }
 
-/* Miniatura desenhada da Maravilha selecionada, presa no lugar dela no mapa */
+/* Ilustração da Maravilha selecionada (feita pelo Guilherme), presa no lugar dela no mapa.
+   A imagem é recortada no círculo dourado dela, que ocupa ~63% da largura do arquivo. */
 .miniatura {
   position: relative;
-  width: 76px;
-  height: 76px;
-  margin-bottom: 10px;
-  display: grid;
-  place-items: center;
+  width: 112px;
+  height: 112px;
+  margin-bottom: 12px;
   border-radius: 50%;
-  background: rgba(0, 15, 12, 0.92); /* Tinta */
-  border: 2px solid rgba(245, 240, 232, 0.7); /* Papel: ainda não vista */
-  color: #f5f0e8;
+  background-color: #f5f0e8; /* Papel, o fundo das ilustrações */
+  background-size: 152%;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  /* Ainda não vista: um pouco apagada */
+  filter: saturate(0.4) brightness(0.92);
   animation: surgir 0.35s ease-out;
-}
-
-.miniatura svg {
-  width: 54px;
-  height: 54px;
 }
 
 /* Ponta embaixo, apontando para o lugar exato */
 .miniatura::after {
   content: "";
   position: absolute;
-  bottom: -9px;
+  bottom: -10px;
   left: 50%;
-  border: 8px solid transparent;
+  border: 9px solid transparent;
   border-bottom: 0;
-  border-top-color: inherit;
+  border-top-color: #f5f0e8;
   transform: translateX(-50%);
 }
 
-/* Vista: traço e borda dourados, com brilho */
+/* Vista: em cores, com anel e brilho dourados */
 .miniaturaVista {
-  border-color: #e2b23a;
-  color: #e2b23a;
-  box-shadow: 0 0 16px rgba(246, 211, 107, 0.55);
+  filter: none;
+  box-shadow: 0 0 0 3px #e2b23a, 0 0 22px rgba(246, 211, 107, 0.7);
 }
 
 @keyframes surgir {

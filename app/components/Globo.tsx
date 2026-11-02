@@ -28,7 +28,6 @@ import {
   type Visita,
 } from "@/lib/visitas";
 import type { Maravilha } from "@/lib/maravilhas";
-import { svgDaMiniatura } from "@/lib/miniaturas-maravilhas";
 import { DETALHE_PAISES } from "@/lib/detalhe-paises";
 import PainelBandeiras from "./PainelBandeiras";
 import FaixaMaravilhas from "./FaixaMaravilhas";
@@ -387,11 +386,11 @@ export default function Globo() {
     let miniatura: Marker | null = null;
     function mostrarMiniatura(m: Maravilha, vista: boolean) {
       esconderMiniatura();
-      // A caixa de fora é posicionada pelo mapa; a de dentro tem o desenho e a animação
+      // A caixa de fora é posicionada pelo mapa; a de dentro tem a ilustração e a animação
       const el = document.createElement("div");
       const desenho = document.createElement("div");
       desenho.className = `${estilos.miniatura} ${vista ? estilos.miniaturaVista : ""}`;
-      desenho.innerHTML = svgDaMiniatura(m.id);
+      desenho.style.backgroundImage = `url(${m.imagem})`;
       desenho.title = m.nome;
       el.appendChild(desenho);
       miniatura = new Marker({ element: el, anchor: "bottom" }).setLngLat(m.ponto).addTo(mapa);
