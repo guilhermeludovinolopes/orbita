@@ -18,8 +18,10 @@ import type { Topology } from "topojson-specification";
 import paises from "i18n-iso-countries";
 import pt from "i18n-iso-countries/langs/pt.json";
 import {
+  anosDe,
   carregarAtracoesVistas,
   carregarVisitas,
+  municipiosDe,
   resumir,
   situacao,
   type AtracaoVista,
@@ -32,6 +34,7 @@ import { DETALHE_PAISES } from "@/lib/detalhe-paises";
 import PainelBandeiras from "./PainelBandeiras";
 import FaixaMaravilhas from "./FaixaMaravilhas";
 import ListaLugares, { type ItemLugar } from "./ListaLugares";
+import MinhasViagens from "./MinhasViagens";
 import estilos from "./Globo.module.css";
 
 paises.registerLocale(pt);
@@ -151,6 +154,7 @@ type Nivel = {
   totalEstado?: number;
   condado?: string;
   nomeCondado?: string;
+  totalCondado?: number;
 };
 
 type Selecionado = {
@@ -174,10 +178,10 @@ type Filho = ItemLugar;
 const plural = (n: number, um: string, varios: string) => `${n.toLocaleString("pt-BR")} ${n === 1 ? um : varios}`;
 
 function detalhe({ visitas, lugares, primeiroAno, ultimoAno }: Resumo, folha?: boolean) {
-  const anos = primeiroAno === ultimoAno ? `${primeiroAno}` : `${primeiroAno}–${ultimoAno}`;
   const partes = [plural(visitas, "visita", "visitas")];
   if (!folha) partes.push(plural(lugares, "lugar", "lugares"));
-  return [...partes, anos].join(" · ");
+  if (primeiroAno) partes.push(primeiroAno === ultimoAno ? `${primeiroAno}` : `${primeiroAno}–${ultimoAno}`);
+  return partes.join(" · ");
 }
 
 function textoSituacao(s: Selecionado) {
@@ -204,6 +208,8 @@ export default function Globo() {
   const [vistas, setVistas] = useState<Map<string, AtracaoVista>>(new Map());
   const irParaMaravilhaRef = useRef<(m: Maravilha) => void>(() => {});
   const esconderMiniaturaRef = useRef<() => void>(() => {});
+  const recarregarRef = useRef<() => Promise<void>>(async () => {});
+  const [viagensAbertas, setViagensAbertas] = useState(false);
 
   // A miniatura da Maravilha só fica no mapa enquanto ela é a selecionada
   useEffect(() => {
@@ -450,6 +456,7 @@ export default function Globo() {
       if (apartirDe === "estado") esconderCamada("condados");
       delete atual.condado;
       delete atual.nomeCondado;
+      delete atual.totalCondado;
       if (apartirDe === "estado") {
         delete atual.estado;
         delete atual.nomeEstado;
@@ -475,8 +482,8 @@ export default function Globo() {
           codigo: f.properties!.codigo,
           nome: f.properties!.nome,
           total: f.properties!.total,
-          visitados: new Set(doItem.map((v) => v.municipio)).size,
-          anos: [...new Set(doItem.map((v) => v.ano))].sort((a, b) => a - b),
+          visitados: municipiosDe(doItem).size,
+          anos: anosDe(doItem),
         };
       });
     }
@@ -484,7 +491,8 @@ export default function Globo() {
     // Municípios mostrados no mapa agora: usados para enquadrar um município clicado na lista
     let municipiosAbertos: GeoJSON.Feature[] = [];
 
-    async function entrarNoPais(codigo: string, nome: string) {
+    // "mover = false" redesenha o nível sem mexer na câmera (depois de editar uma viagem)
+    async function entrarNoPais(codigo: string, nome: string, mover = true) {
       const det = DETALHE_PAISES[codigo];
       const doPais = visitas.filter((v) => v.pais === codigo);
       const geo = await buscarGeo(det.estados);
@@ -512,10 +520,10 @@ export default function Globo() {
       });
       // Enquadra a parte principal do país (sem ilhas e territórios distantes)
       const contorno = contornosPaises.find((f) => f.properties?.codigo === codigo);
-      mapa.fitBounds(limitesDe(contorno ? [partePrincipal(contorno)] : geo.features), { padding, duration: 1400 });
+      if (mover) mapa.fitBounds(limitesDe(contorno ? [partePrincipal(contorno)] : geo.features), { padding, duration: 1400 });
     }
 
-    async function entrarNoEstado(codigo: string, nome: string, total: number) {
+    async function entrarNoEstado(codigo: string, nome: string, total: number, mover = true) {
       const det = DETALHE_PAISES[atual.pais!];
       const doEstado = visitas.filter((v) => v.pais === atual.pais && v.nivel1 === codigo);
       const comCondados = Boolean(det.condados);
@@ -553,10 +561,10 @@ export default function Globo() {
           : listar(geo.features, (c) => doEstado.filter((v) => v.municipio === c), "municipio"),
         tituloFilhos: (comCondados ? det.nomes.condado! : det.nomes.municipio)[1],
       });
-      mapa.fitBounds(limitesDe(geo.features), { padding, duration: 1400 });
+      if (mover) mapa.fitBounds(limitesDe(geo.features), { padding, duration: 1400 });
     }
 
-    async function entrarNoCondado(codigo: string, nome: string, total: number) {
+    async function entrarNoCondado(codigo: string, nome: string, total: number, mover = true) {
       const det = DETALHE_PAISES[atual.pais!];
       const doCondado = visitas.filter((v) => v.pais === atual.pais && v.nivel1 === atual.estado && v.condado === codigo);
       const [geo, geoCondados] = await Promise.all([buscarGeo(det.municipios(atual.estado!)), buscarGeo(det.condados!(atual.estado!))]);
@@ -566,7 +574,7 @@ export default function Globo() {
       mostrarCamada("municipios", marcar(municipios, (c) => doCondado.filter((v) => v.municipio === c), false));
       municipiosAbertos = municipios;
       trazerParaFrente();
-      Object.assign(atual, { condado: codigo, nomeCondado: nome });
+      Object.assign(atual, { condado: codigo, nomeCondado: nome, totalCondado: total });
       setNivel({ ...atual });
 
       const resumo = resumir(doCondado);
@@ -583,7 +591,7 @@ export default function Globo() {
         tituloFilhos: det.nomes.municipio[1],
       });
       // Condado sem cidades (só área rural): enquadra o próprio condado
-      mapa.fitBounds(limitesDe(municipios.length ? municipios : condado ? [condado] : []), { padding, duration: 1400 });
+      if (mover) mapa.fitBounds(limitesDe(municipios.length ? municipios : condado ? [condado] : []), { padding, duration: 1400 });
     }
 
     function mostrarMunicipio(codigo: string, nome: string) {
@@ -630,6 +638,30 @@ export default function Globo() {
       }
     };
 
+    // Cor de cada país no globo, pela situação das visitas que caem nele
+    function colorirPaises() {
+      setVisitados(new Set(visitas.map((v) => v.pais)));
+      for (const f of contornosPaises) {
+        const codigo = f.properties!.codigo;
+        const resumo = resumir(visitas.filter((v) => v.pais === codigo));
+        f.properties!.situacao = situacao(resumo, DETALHE_PAISES[codigo]?.totalMunicipios) ?? "";
+      }
+    }
+
+    // Depois de criar, editar ou apagar uma viagem: busca as visitas de novo e repinta
+    // o globo e o nível aberto, sem mover a câmera
+    recarregarRef.current = async () => {
+      visitas = await carregarVisitas();
+      colorirPaises();
+      (mapa.getSource("paises") as GeoJSONSource | undefined)?.setData({ type: "FeatureCollection", features: contornosPaises });
+      if (atual.condado) {
+        const { estado, nomeEstado, totalEstado, condado, nomeCondado, totalCondado } = atual;
+        await entrarNoEstado(estado!, nomeEstado!, totalEstado!, false);
+        await entrarNoCondado(condado, nomeCondado!, totalCondado ?? 0, false);
+      } else if (atual.estado) await entrarNoEstado(atual.estado, atual.nomeEstado!, atual.totalEstado!, false);
+      else if (atual.pais) await entrarNoPais(atual.pais, atual.nomePais!, false);
+    };
+
     mapa.once("style.load", async () => {
       const topo = (await contornos).default as unknown as Topology;
       const colecao = feature(topo, topo.objects.countries) as GeoJSON.FeatureCollection;
@@ -641,14 +673,8 @@ export default function Globo() {
       }
       colecao.features.push(...(await nacoesReinoUnido).features);
       visitas = await visitasCarregadas;
-      setVisitados(new Set(visitas.map((v) => v.pais)));
-      for (const f of colecao.features) {
-        const codigo = f.properties!.codigo;
-        const resumo = resumir(visitas.filter((v) => v.pais === codigo));
-        f.properties!.situacao = situacao(resumo, DETALHE_PAISES[codigo]?.totalMunicipios) ?? "";
-      }
-
       contornosPaises = colecao.features;
+      colorirPaises();
       mapa.addSource("paises", { type: "geojson", data: colecao, promoteId: "codigo" });
       mapa.addLayer({ id: "paises", type: "fill", source: "paises", paint: { "fill-color": PREENCHIMENTO } });
 
@@ -780,18 +806,25 @@ export default function Globo() {
       <canvas ref={ceu} className={estilos.ceu} aria-hidden="true" />
       <div ref={recipiente} className={estilos.mapa} />
 
-      {nivel.pais && (
-        <nav className={estilos.trilha} aria-label="Onde você está no mapa">
-          <button className={estilos.voltar} onClick={() => voltarRef.current()}>
-            ← {nivel.condado ? nivel.nomeEstado : nivel.estado ? nivel.nomePais : "Mundo"}
-          </button>
-          <span className={estilos.caminho}>
-            Mundo / {nivel.nomePais}
-            {nivel.estado && ` / ${nivel.nomeEstado}`}
-            {nivel.condado && ` / ${nivel.nomeCondado}`}
-          </span>
-        </nav>
-      )}
+      <div className={estilos.trilha}>
+        <button className={estilos.voltar} onClick={() => setViagensAbertas(true)}>
+          Minhas viagens
+        </button>
+        {nivel.pais && (
+          <nav className={estilos.niveis} aria-label="Onde você está no mapa">
+            <button className={estilos.voltar} onClick={() => voltarRef.current()}>
+              ← {nivel.condado ? nivel.nomeEstado : nivel.estado ? nivel.nomePais : "Mundo"}
+            </button>
+            <span className={estilos.caminho}>
+              Mundo / {nivel.nomePais}
+              {nivel.estado && ` / ${nivel.nomeEstado}`}
+              {nivel.condado && ` / ${nivel.nomeCondado}`}
+            </span>
+          </nav>
+        )}
+      </div>
+
+      {viagensAbertas && <MinhasViagens aoFechar={() => setViagensAbertas(false)} aoMudar={() => recarregarRef.current()} />}
 
       <PainelBandeiras
         antesDosPaises={<FaixaMaravilhas vistas={vistas} aoEscolher={(m) => irParaMaravilhaRef.current(m)} />}

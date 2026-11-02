@@ -1,0 +1,405 @@
+/* Painel "Minhas viagens": gaveta à esquerda, por cima do globo, no mesmo tom da coluna das bandeiras */
+.painel {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  bottom: 16px;
+  z-index: 5;
+  width: min(420px, calc(100% - 32px));
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 15, 12, 0.95); /* Tinta */
+  border: 1px solid rgba(245, 240, 232, 0.12);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 18px 20px 10px;
+}
+
+.titulo {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.resumo {
+  margin-top: 4px;
+  font-family: var(--fonte-mono), monospace;
+  font-size: 12px;
+  color: var(--dourado);
+}
+
+.fechar {
+  background: none;
+  border: none;
+  color: var(--papel);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.fechar:hover {
+  opacity: 1;
+}
+
+.acoes {
+  display: flex;
+  gap: 8px;
+  padding: 0 20px 12px;
+  border-bottom: 1px solid rgba(245, 240, 232, 0.1);
+}
+
+.busca,
+.campo input,
+.campo select,
+.campo textarea,
+.entrar input {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  background: rgba(245, 240, 232, 0.06);
+  border: 1px solid rgba(245, 240, 232, 0.18);
+  border-radius: 8px;
+  color: var(--papel);
+  font: inherit;
+  font-size: 14px;
+}
+
+.busca {
+  flex: 1;
+}
+
+.campo select option {
+  background: var(--tinta);
+}
+
+.busca:focus,
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus,
+.entrar input:focus {
+  outline: none;
+  border-color: var(--dourado);
+}
+
+.campo :disabled {
+  opacity: 0.4;
+}
+
+.botaoPrincipal {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  background: var(--papel);
+  color: var(--tinta);
+  border: none;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.botaoPrincipal:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.link {
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--papel);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.link:hover {
+  opacity: 1;
+}
+
+.lista {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 20px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 240, 232, 0.25) transparent;
+}
+
+.aviso {
+  margin: 12px 0;
+  font-size: 13px;
+  color: #f0a8a8;
+}
+
+/* Cada ano: o número grande à esquerda, a contagem e o "+" na mesma linha */
+.ano {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(245, 240, 232, 0.08);
+}
+
+.cabecalhoAno {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.numeroAno {
+  font-family: var(--fonte-mono), monospace;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.contagem {
+  flex: 1;
+  font-family: var(--fonte-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dourado);
+}
+
+.mais {
+  width: 26px;
+  height: 26px;
+  align-self: center;
+  background: none;
+  border: 1px solid rgba(245, 240, 232, 0.25);
+  border-radius: 50%;
+  color: var(--papel);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mais:hover {
+  border-color: var(--dourado);
+  color: var(--dourado);
+}
+
+/* Anos sem viagem ficam mais baixos e apagados, para a linha do tempo não pesar */
+.anoVazio {
+  padding: 6px 0;
+}
+
+.anoVazio .numeroAno {
+  font-size: 14px;
+  opacity: 0.4;
+}
+
+.anoVazio .contagem {
+  color: var(--papel);
+  opacity: 0.3;
+}
+
+.viagens {
+  list-style: none;
+  padding: 0;
+  margin-top: 8px;
+}
+
+.viagem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 0 6px 12px;
+  border-left: 2px solid var(--verde);
+}
+
+.viagem + .viagem {
+  margin-top: 4px;
+}
+
+.textoViagem {
+  flex: 1;
+  min-width: 0;
+}
+
+.lugar {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.local {
+  font-weight: 400;
+  opacity: 0.75;
+}
+
+.onde {
+  font-family: var(--fonte-mono), monospace;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.data {
+  color: var(--dourado);
+}
+
+.observacao {
+  margin-top: 4px;
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.botoesViagem {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.botoesViagem button {
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--papel);
+  font-family: var(--fonte-mono), monospace;
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+.botoesViagem button:hover {
+  opacity: 1;
+}
+
+.rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 20px;
+  border-top: 1px solid rgba(245, 240, 232, 0.1);
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.entrar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.entrar input {
+  flex: 1;
+}
+
+/* Formulário: cobre o painel inteiro */
+.formularioFundo {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow-y: auto;
+  background: var(--tinta);
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+}
+
+.tituloFormulario {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.campo > span {
+  font-family: var(--fonte-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.campo textarea {
+  resize: vertical;
+}
+
+.linhaCampos {
+  display: grid;
+  grid-template-columns: 1.2fr 1.4fr 0.8fr;
+  gap: 8px;
+}
+
+.escolhido {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--dourado);
+  border-radius: 8px;
+}
+
+.escolhido div,
+.resultados button {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.escolhido small,
+.resultados small,
+.ajuda {
+  font-family: var(--fonte-mono), monospace;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.resultados {
+  list-style: none;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid rgba(245, 240, 232, 0.12);
+  border-radius: 8px;
+}
+
+.resultados button {
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  color: var(--papel);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.resultados li + li {
+  border-top: 1px solid rgba(245, 240, 232, 0.08);
+}
+
+.resultados button:hover,
+.resultados button:focus {
+  outline: none;
+  background: rgba(245, 240, 232, 0.08);
+}
+
+.botoesFormulario {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  margin-top: 4px;
+}

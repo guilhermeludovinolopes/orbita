@@ -164,6 +164,12 @@
   gap: 14px;
 }
 
+.niveis {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
 .voltar {
   padding: 8px 14px;
   background: var(--tinta);

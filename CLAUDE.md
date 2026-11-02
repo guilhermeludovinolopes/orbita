@@ -16,7 +16,8 @@ App web pessoal do Guilherme Lopes (linha **GL Pessoal**, sem fins profissionais
 ## Dados
 - Fonte original: planilha `~/Documents/Arrumar/Roadmap - Guilherme Lopes.xlsx` (aba "Time Line"). Não alterar.
 - `dados/` fica fora do Git (dados pessoais em repo público).
-- Cada visita = lugar (por código oficial) + data (ano obrigatório; mês e dia opcionais) + observação livre + local específico opcional (ex.: Riviera de São Lourenço dentro de Bertioga).
+- Cada visita = lugar (por código oficial) + data (ano, mês e dia opcionais; sem ano a visita só marca o lugar) + observação livre + local específico opcional (ex.: Riviera de São Lourenço dentro de Bertioga). O lugar pode parar no país ou no estado (para países sem mapa detalhado, como o Japão).
+- Painel "Minhas viagens" (botão no topo do globo): linha do tempo por ano, do ano atual até 1999 (ano em que o Guilherme nasceu), mais o grupo "Sem ano". Todos veem; só o dono do mapa edita, depois de entrar pelo link no e-mail (Supabase Auth, sem cadastro aberto). A busca de lugares usa `public/geo/lugares.json`, gerado por `scripts/gerar-indice-lugares.mjs` (rodar de novo quando um mapa de país mudar).
 - Hierarquia: país → estado (1º nível) → **condado, só onde existe** (condado nos EUA e na Irlanda, província na Itália, distrito na Suíça) → município. O município fica sempre no mesmo nível em todos os países (São Paulo está no nível de Dublin, não no de County Dublin). Sem condado, o zoom vai direto do estado para o município. Nomes oficiais locais.
 - Reino Unido separado em 4 nações, cada uma como "país" no globo: Inglaterra (`GB-ENG`), Escócia (`GB-SCT`), País de Gales (`GB-WLS`), Irlanda do Norte (`GB-NIR`).
 - Londres é um lugar só (os 33 distritos juntos), com o código ONS da região Greater London (`E12000007`); por isso a região fica dourada quando visitada (aprovado pelo Guilherme). Dublin = Dublin City, com código provisório até o mapa da Irlanda.
