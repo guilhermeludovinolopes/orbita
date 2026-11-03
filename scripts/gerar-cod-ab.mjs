@@ -7,7 +7,7 @@
 //   public/geo/<pasta>/condados-<estado>.json      nível intermediário, só onde existe (províncias do Peru)
 //   public/geo/<pasta>/municipios-<estado>.json    municípios, com o condado quando houver
 //
-// Uso: node scripts/gerar-cod-ab.mjs <PE|EC|CO|VE> <pasta com os <iso3>_admN.geojson>
+// Uso: node scripts/gerar-cod-ab.mjs <PE|EC|CO|VE|SR> <pasta com os <iso3>_admN.geojson>
 import { forma, gravar, lerJson } from "./geo-comum.mjs";
 
 const PAISES = {
@@ -51,6 +51,11 @@ const PAISES = {
       "21": "VE-T", "22": "VE-U", "23": "VE-V", "24": "VE-X",
     },
   },
+  // Suriname (base da ONU a partir do GADM, sem fonte nacional aberta): distrito → ressort
+  SR: {
+    iso3: "sur", pasta: "sr", nivelMunicipio: 2, comCondados: false, idioma: "NL",
+    iso: { "01": "SR-BR", "02": "SR-CM", "03": "SR-CR", "04": "SR-MA", "05": "SR-NI", "06": "SR-PR", "07": "SR-PM", "08": "SR-SA", "09": "SR-SI", "10": "SR-WA" },
+  },
 };
 
 const [pais, origem] = process.argv.slice(2);
@@ -59,7 +64,7 @@ if (!cfg) throw new Error(`País sem configuração: ${pais}`);
 
 const ler = (nivel) => lerJson(`${origem}/${cfg.iso3}_adm${nivel}.geojson`).features;
 const codigo = (f, nivel) => f.properties[`ADM${nivel}_PCODE`].slice(2); // sem o prefixo do país
-const nome = (f, nivel) => f.properties[`ADM${nivel}_ES`];
+const nome = (f, nivel) => f.properties[`ADM${nivel}_${cfg.idioma ?? "ES"}`];
 
 const estados = ler(1);
 const condados = cfg.comCondados ? ler(2) : [];
