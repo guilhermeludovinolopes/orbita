@@ -156,6 +156,11 @@ export const DETALHE_PAISES: Record<string, DetalhePais> = {
     nomes: { estado: ["paróquia", "paróquias", "uma"], municipio: ["comunidade", "comunidades", "uma"] },
     ...arquivos("jm", false),
   },
+  CA: {
+    totalMunicipios: 5161, // subdivisões censitárias de 2021: municípios, reservas indígenas e territórios não organizados
+    nomes: { estado: ["província", "províncias", "uma"], condado: ["divisão censitária", "divisões censitárias", "uma"], municipio: ["município", "municípios", "um"] },
+    ...arquivos("ca", true),
+  },
   IE: {
     totalMunicipios: 31,
     nomes: { estado: ["província", "províncias", "uma"], condado: ["condado", "condados", "um"], municipio: ["prefeitura", "prefeituras", "uma"] },

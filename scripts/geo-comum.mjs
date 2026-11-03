@@ -4,8 +4,8 @@ import shapefile from "shapefile";
 
 export const lerJson = (arquivo) => JSON.parse(readFileSync(arquivo, "utf8"));
 
-export async function lerShapefile(caminhoSemExtensao) {
-  const fonte = await shapefile.open(`${caminhoSemExtensao}.shp`, `${caminhoSemExtensao}.dbf`, { encoding: "utf-8" });
+export async function lerShapefile(caminhoSemExtensao, encoding = "utf-8") {
+  const fonte = await shapefile.open(`${caminhoSemExtensao}.shp`, `${caminhoSemExtensao}.dbf`, { encoding });
   const features = [];
   for (let r = await fonte.read(); !r.done; r = await fonte.read()) features.push(r.value);
   return features;
