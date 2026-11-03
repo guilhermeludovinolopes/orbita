@@ -10,7 +10,7 @@
 // Uso: node scripts/gerar-indice-lugares.mjs
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
-const PASTAS = { BR: "br", US: "us", IT: "it", CH: "ch", PT: "pt", "GB-ENG": "gb-eng", IE: "ie", AR: "ar", CL: "cl", PY: "py", BO: "bo", PE: "pe", EC: "ec", CO: "co", VE: "ve", SR: "sr", MX: "mx", GT: "gt", HN: "hn", SV: "sv", NI: "ni", CR: "cr", PA: "pa", CU: "cu", DO: "do", HT: "ht", JM: "jm", CA: "ca" };
+const PASTAS = { BR: "br", US: "us", IT: "it", CH: "ch", PT: "pt", "GB-ENG": "gb-eng", IE: "ie", AR: "ar", CL: "cl", PY: "py", BO: "bo", PE: "pe", EC: "ec", CO: "co", VE: "ve", SR: "sr", MX: "mx", GT: "gt", HN: "hn", SV: "sv", NI: "ni", CR: "cr", PA: "pa", CU: "cu", DO: "do", HT: "ht", JM: "jm", CA: "ca", JP: "jp", KR: "kr", IN: "in", IL: "il", JO: "jo", TJ: "tj", TM: "tm", SG: "sg", BN: "bn", SA: "sa", AZ: "az", GE: "ge", KW: "kw", AF: "af", AM: "am", BD: "bd", BT: "bt", KH: "kh", QA: "qa", KZ: "kz", CN: "cn", KP: "kp", PH: "ph", YE: "ye", ID: "id", IR: "ir", IQ: "iq", LA: "la", LB: "lb", MY: "my", MV: "mv", MN: "mn", MM: "mm", NP: "np", OM: "om", PS: "ps", PK: "pk", KG: "kg", SY: "sy", LK: "lk", TH: "th", TL: "tl", TR: "tr", UZ: "uz", VN: "vn" };
 
 const ler = (arquivo) => JSON.parse(readFileSync(arquivo, "utf8")).features.map((f) => f.properties);
 
