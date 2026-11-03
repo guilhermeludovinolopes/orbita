@@ -101,6 +101,61 @@ export const DETALHE_PAISES: Record<string, DetalhePais> = {
     nomes: { estado: ["distrito", "distritos", "um"], municipio: ["ressort", "ressorts", "um"] },
     ...arquivos("sr", false),
   },
+  MX: {
+    totalMunicipios: 2457, // municípios do Marco Geoestadístico 2020 do INEGI (os criados depois não vêm no mapa)
+    nomes: { estado: ["estado", "estados", "um"], municipio: ["município", "municípios", "um"] },
+    ...arquivos("mx", false),
+  },
+  GT: {
+    totalMunicipios: 342,
+    nomes: { estado: ["departamento", "departamentos", "um"], municipio: ["município", "municípios", "um"] },
+    ...arquivos("gt", false),
+  },
+  HN: {
+    totalMunicipios: 298,
+    nomes: { estado: ["departamento", "departamentos", "um"], municipio: ["município", "municípios", "um"] },
+    ...arquivos("hn", false),
+  },
+  SV: {
+    totalMunicipios: 262, // distritos: os municípios antigos, agrupados em 44 municípios desde 2024
+    nomes: { estado: ["departamento", "departamentos", "um"], condado: ["município", "municípios", "um"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("sv", true),
+  },
+  NI: {
+    totalMunicipios: 153,
+    nomes: { estado: ["departamento", "departamentos", "um"], municipio: ["município", "municípios", "um"] },
+    ...arquivos("ni", false),
+  },
+  CR: {
+    totalMunicipios: 81, // cantões da base do INEC (84 hoje; os 3 mais novos não vêm no mapa)
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["cantão", "cantões", "um"] },
+    ...arquivos("cr", false),
+  },
+  PA: {
+    totalMunicipios: 76,
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("pa", false),
+  },
+  CU: {
+    totalMunicipios: 168,
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["município", "municípios", "um"] },
+    ...arquivos("cu", false),
+  },
+  DO: {
+    totalMunicipios: 155,
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["município", "municípios", "um"] },
+    ...arquivos("do", false),
+  },
+  HT: {
+    totalMunicipios: 140,
+    nomes: { estado: ["departamento", "departamentos", "um"], municipio: ["comuna", "comunas", "uma"] },
+    ...arquivos("ht", false),
+  },
+  JM: {
+    totalMunicipios: 131, // áreas de desenvolvimento da Social Development Commission
+    nomes: { estado: ["paróquia", "paróquias", "uma"], municipio: ["comunidade", "comunidades", "uma"] },
+    ...arquivos("jm", false),
+  },
   IE: {
     totalMunicipios: 31,
     nomes: { estado: ["província", "províncias", "uma"], condado: ["condado", "condados", "um"], municipio: ["prefeitura", "prefeituras", "uma"] },
