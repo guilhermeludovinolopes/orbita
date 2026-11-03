@@ -591,6 +591,276 @@ export const DETALHE_PAISES: Record<string, DetalhePais> = {
     nomes: { estado: ["país", "países", "um"], municipio: ["castello", "castelli", "um"] },
     ...arquivos("sm", false),
   },
+  ZA: {
+    totalMunicipios: 213,
+    nomes: { estado: ["província", "províncias", "uma"], condado: ["distrito", "distritos", "um"], municipio: ["município", "municípios", "um"] },
+    ...arquivos("za", true),
+  },
+  AO: {
+    totalMunicipios: 161,
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["município", "municípios", "um"] },
+    ...arquivos("ao", false),
+  },
+  DZ: {
+    totalMunicipios: 1541,
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["comuna", "comunas", "uma"] },
+    ...arquivos("dz", false),
+  },
+  BJ: {
+    totalMunicipios: 77,
+    nomes: { estado: ["departamento", "departamentos", "um"], municipio: ["comuna", "comunas", "uma"] },
+    ...arquivos("bj", false),
+  },
+  BW: {
+    totalMunicipios: 28,
+    nomes: { estado: ["distrito", "distritos", "um"], municipio: ["subdistrito", "subdistritos", "um"] },
+    ...arquivos("bw", false),
+  },
+  BF: {
+    totalMunicipios: 351,
+    nomes: { estado: ["região", "regiões", "uma"], condado: ["província", "províncias", "uma"], municipio: ["comuna", "comunas", "uma"] },
+    ...arquivos("bf", true),
+  },
+  BI: {
+    totalMunicipios: 119,
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["comuna", "comunas", "uma"] },
+    ...arquivos("bi", false),
+  },
+  CV: {
+    totalMunicipios: 32,
+    nomes: { estado: ["município", "municípios", "um"], municipio: ["freguesia", "freguesias", "uma"] },
+    ...arquivos("cv", false),
+  },
+  CM: {
+    totalMunicipios: 360,
+    nomes: { estado: ["região", "regiões", "uma"], condado: ["departamento", "departamentos", "um"], municipio: ["arrondissement", "arrondissements", "um"] },
+    ...arquivos("cm", true),
+  },
+  TD: {
+    totalMunicipios: 70,
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["departamento", "departamentos", "um"] },
+    ...arquivos("td", false),
+  },
+  KM: {
+    totalMunicipios: 17,
+    nomes: { estado: ["ilha", "ilhas", "uma"], municipio: ["prefeitura", "prefeituras", "uma"] },
+    ...arquivos("km", false),
+  },
+  CG: {
+    totalMunicipios: 89,
+    nomes: { estado: ["departamento", "departamentos", "um"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("cg", false),
+  },
+  CI: {
+    totalMunicipios: 510,
+    nomes: { estado: ["região", "regiões", "uma"], condado: ["departamento", "departamentos", "um"], municipio: ["subprefeitura", "subprefeituras", "uma"] },
+    ...arquivos("ci", true),
+  },
+  DJ: {
+    totalMunicipios: 20,
+    nomes: { estado: ["região", "regiões", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("dj", false),
+  },
+  EG: {
+    totalMunicipios: 365,
+    nomes: { estado: ["governadoria", "governadorias", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("eg", false),
+  },
+  ER: {
+    totalMunicipios: 58,
+    nomes: { estado: ["região", "regiões", "uma"], municipio: ["subzona", "subzonas", "uma"] },
+    ...arquivos("er", false),
+  },
+  ET: {
+    totalMunicipios: 1082,
+    nomes: { estado: ["região", "regiões", "uma"], condado: ["zona", "zonas", "uma"], municipio: ["woreda", "woredas", "um"] },
+    ...arquivos("et", true),
+  },
+  GA: {
+    totalMunicipios: 48,
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["departamento", "departamentos", "um"] },
+    ...arquivos("ga", false),
+  },
+  GM: {
+    totalMunicipios: 49,
+    nomes: { estado: ["região", "regiões", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("gm", false),
+  },
+  GH: {
+    totalMunicipios: 260,
+    nomes: { estado: ["região", "regiões", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("gh", false),
+  },
+  GN: {
+    totalMunicipios: 34,
+    nomes: { estado: ["região", "regiões", "uma"], municipio: ["prefeitura", "prefeituras", "uma"] },
+    ...arquivos("gn", false),
+  },
+  GQ: {
+    totalMunicipios: 32,
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("gq", false),
+  },
+  GW: {
+    totalMunicipios: 39,
+    nomes: { estado: ["região", "regiões", "uma"], municipio: ["setor", "setores", "um"] },
+    ...arquivos("gw", false),
+  },
+  LS: {
+    totalMunicipios: 78,
+    nomes: { estado: ["distrito", "distritos", "um"], municipio: ["conselho comunitário", "conselhos comunitários", "um"] },
+    ...arquivos("ls", false),
+  },
+  LR: {
+    totalMunicipios: 136,
+    nomes: { estado: ["condado", "condados", "um"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("lr", false),
+  },
+  LY: {
+    totalMunicipios: 22,
+    nomes: { estado: ["região", "regiões", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("ly", false),
+  },
+  MG: {
+    totalMunicipios: 1579,
+    nomes: { estado: ["província", "províncias", "uma"], condado: ["região", "regiões", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("mg", true),
+  },
+  MW: {
+    totalMunicipios: 32,
+    nomes: { estado: ["região", "regiões", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("mw", false),
+  },
+  ML: {
+    totalMunicipios: 701,
+    nomes: { estado: ["região", "regiões", "uma"], condado: ["círculo", "círculos", "um"], municipio: ["comuna", "comunas", "uma"] },
+    ...arquivos("ml", true),
+  },
+  MA: {
+    totalMunicipios: 1507,
+    nomes: { estado: ["região", "regiões", "uma"], condado: ["província", "províncias", "uma"], municipio: ["comuna", "comunas", "uma"] },
+    ...arquivos("ma", true),
+  },
+  MR: {
+    totalMunicipios: 63,
+    nomes: { estado: ["região", "regiões", "uma"], municipio: ["departamento", "departamentos", "um"] },
+    ...arquivos("mr", false),
+  },
+  MZ: {
+    totalMunicipios: 159,
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("mz", false),
+  },
+  NA: {
+    totalMunicipios: 107,
+    nomes: { estado: ["região", "regiões", "uma"], municipio: ["círculo eleitoral", "círculos eleitorais", "um"] },
+    ...arquivos("na", false),
+  },
+  NE: {
+    totalMunicipios: 266,
+    nomes: { estado: ["região", "regiões", "uma"], condado: ["departamento", "departamentos", "um"], municipio: ["comuna", "comunas", "uma"] },
+    ...arquivos("ne", true),
+  },
+  NG: {
+    totalMunicipios: 774,
+    nomes: { estado: ["estado", "estados", "um"], municipio: ["área de governo local", "áreas de governo local", "uma"] },
+    ...arquivos("ng", false),
+  },
+  KE: {
+    totalMunicipios: 290,
+    nomes: { estado: ["condado", "condados", "um"], municipio: ["subcondado", "subcondados", "um"] },
+    ...arquivos("ke", false),
+  },
+  CF: {
+    totalMunicipios: 72,
+    nomes: { estado: ["prefeitura", "prefeituras", "uma"], municipio: ["subprefeitura", "subprefeituras", "uma"] },
+    ...arquivos("cf", false),
+  },
+  CD: {
+    totalMunicipios: 189,
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["território", "territórios", "um"] },
+    ...arquivos("cd", false),
+  },
+  RW: {
+    totalMunicipios: 416,
+    nomes: { estado: ["província", "províncias", "uma"], condado: ["distrito", "distritos", "um"], municipio: ["setor", "setores", "um"] },
+    ...arquivos("rw", true),
+  },
+  ST: {
+    totalMunicipios: 7,
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("st", false),
+  },
+  SC: {
+    totalMunicipios: 8,
+    nomes: { estado: ["região", "regiões", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("sc", false),
+  },
+  SN: {
+    totalMunicipios: 46,
+    nomes: { estado: ["região", "regiões", "uma"], municipio: ["departamento", "departamentos", "um"] },
+    ...arquivos("sn", false),
+  },
+  SL: {
+    totalMunicipios: 167,
+    nomes: { estado: ["província", "províncias", "uma"], condado: ["distrito", "distritos", "um"], municipio: ["chefatura", "chefaturas", "uma"] },
+    ...arquivos("sl", true),
+  },
+  SO: {
+    totalMunicipios: 74,
+    nomes: { estado: ["região", "regiões", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("so", false),
+  },
+  SZ: {
+    totalMunicipios: 55,
+    nomes: { estado: ["região", "regiões", "uma"], municipio: ["inkhundla", "tinkhundla", "um"] },
+    ...arquivos("sz", false),
+  },
+  SD: {
+    totalMunicipios: 189,
+    nomes: { estado: ["estado", "estados", "um"], municipio: ["localidade", "localidades", "uma"] },
+    ...arquivos("sd", false),
+  },
+  SS: {
+    totalMunicipios: 79,
+    nomes: { estado: ["estado", "estados", "um"], municipio: ["condado", "condados", "um"] },
+    ...arquivos("ss", false),
+  },
+  TZ: {
+    totalMunicipios: 170,
+    nomes: { estado: ["região", "regiões", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("tz", false),
+  },
+  TG: {
+    totalMunicipios: 40,
+    nomes: { estado: ["região", "regiões", "uma"], municipio: ["prefeitura", "prefeituras", "uma"] },
+    ...arquivos("tg", false),
+  },
+  TN: {
+    totalMunicipios: 264,
+    nomes: { estado: ["governadoria", "governadorias", "uma"], municipio: ["delegação", "delegações", "uma"] },
+    ...arquivos("tn", false),
+  },
+  UG: {
+    totalMunicipios: 135,
+    nomes: { estado: ["região", "regiões", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("ug", false),
+  },
+  ZM: {
+    totalMunicipios: 116,
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("zm", false),
+  },
+  ZW: {
+    totalMunicipios: 91,
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("zw", false),
+  },
+  MU: {
+    totalMunicipios: 12,
+    nomes: { estado: ["país", "países", "um"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("mu", false),
+  },
   IE: {
     totalMunicipios: 31,
     nomes: { estado: ["província", "províncias", "uma"], condado: ["condado", "condados", "um"], municipio: ["prefeitura", "prefeituras", "uma"] },
