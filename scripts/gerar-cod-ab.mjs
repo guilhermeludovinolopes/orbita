@@ -8,7 +8,7 @@
 //   public/geo/<pasta>/municipios-<estado>.json    municípios, com o condado quando houver
 //
 // Uso: node scripts/gerar-cod-ab.mjs <sigla do país em PAISES> <pasta com os <iso3>_admN.geojson> [ADM1 do geoBoundaries, para o ISO]
-import { areaDaForma, areaDoPonto, forma, gravar, lerJson, normalizar, pontoDentro, pontoInterno } from "./geo-comum.mjs";
+import { areaDaForma, areaDoPonto, forma, gravar, lerJson, normalizar, paraLeste, pontoDentro, pontoInterno } from "./geo-comum.mjs";
 
 const PAISES = {
   // Peru (IGN/INEI): departamento → província → distrito
@@ -214,6 +214,15 @@ const PAISES = {
   LS: { iso3: "lso", pasta: "ls", nivelMunicipio: 2, comCondados: false, prefixo: 2 }, // distrito → conselho comunitário
   // Tunísia: o 1º nível da base são 6 regiões; o estado é a governadoria (24) e o município, a delegação
   TN: { iso3: "tun", pasta: "tn", nivelEstado: 2, nivelMunicipio: 3, comCondados: false },
+  // Oceania
+  PG: { iso3: "png", pasta: "pg", nivelMunicipio: 2, comCondados: false, idioma: "EN", limpar: / (Province|District)$/ }, // província → distrito
+  FJ: { iso3: "fji", pasta: "fj", nivelMunicipio: 2, comCondados: false, idioma: "EN", leste: true, limpar: /\s+Division$/ }, // divisão → província
+  SB: { iso3: "slb", pasta: "sb", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // província → distrito eleitoral
+  VU: { iso3: "vut", pasta: "vu", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // província → conselho de área
+  TO: { iso3: "ton", pasta: "to", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // divisão → distrito
+  KI: { iso3: "kir", pasta: "ki", nivelMunicipio: 2, comCondados: false, idioma: "EN", leste: true }, // grupo de ilhas → ilha
+  FM: { iso3: "fsm", pasta: "fm", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // estado → município
+  MH: { iso3: "mhl", pasta: "mh", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // grupo → atol ou ilha
 };
 
 const [pais, origem, mapaIso] = process.argv.slice(2);
@@ -250,7 +259,8 @@ function isoDoMapa(estado, num) {
   return isosExistentes.has(reserva) ? `${pais}-X${num}` : reserva;
 }
 
-const ler = (nivel) => lerJson(`${origem}/${cfg.iso3}_adm${nivel}.geojson`).features;
+const ler = (nivel) => lerJson(`${origem}/${cfg.iso3}_adm${nivel}.geojson`).features
+  .map((f) => (cfg.leste ? { ...f, geometry: paraLeste(f.geometry) } : f));
 // Sem o prefixo do país (PE, KAZ...); no Lesoto a letra seguinte já é parte do código (LSG01 → G01)
 const codigo = (f, nivel) => {
   const pcode = f.properties[`ADM${nivel}_PCODE`];
