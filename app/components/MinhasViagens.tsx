@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { Session } from "@supabase/supabase-js";
 import {
-  acompanharSessao,
   apagarViagem,
   carregarViagens,
-  idDoPerfil,
+  chaveGuardada,
+  entrarComChave,
+  esquecerChave,
   nomeDoPais,
-  pedirLink,
-  sair,
   salvarViagem,
   semAcento,
   type NovaViagem,
@@ -46,19 +44,18 @@ function Bandeira({ pais, classe }: { pais: string; classe: string }) {
 
 // Painel "Minhas viagens", em tela cheia: um bloco por ano (fechado até abrir pela setinha),
 // do mais recente até 1999, mais o grupo "Sem ano". Abre só para ver; o botão "Editar"
-// liga os botões de adicionar, editar e apagar (depois de entrar, só para o dono do mapa).
+// liga os botões de adicionar, editar e apagar (para quem sabe a chave do mapa).
 export default function MinhasViagens({ aoFechar, aoMudar }: Props) {
   const [viagens, setViagens] = useState<Viagem[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
-  const [sessao, setSessao] = useState<Session | null>(null);
-  const [dono, setDono] = useState<string | null>(null);
+  const [comChave, setComChave] = useState(false);
   const [editando, setEditando] = useState<{ viagem?: Viagem; ano: number | null } | null>(null);
   const [modoEdicao, setModoEdicao] = useState(false);
   const [pedindoEntrada, setPedindoEntrada] = useState(false);
   const [abertos, setAbertos] = useState<Set<string>>(new Set());
   const [filtro, setFiltro] = useState("");
 
-  const podeEditar = Boolean(sessao && dono && sessao.user.id === dono);
+  const podeEditar = comChave;
   const editavel = modoEdicao && podeEditar;
 
   async function recarregar() {
@@ -73,8 +70,7 @@ export default function MinhasViagens({ aoFechar, aoMudar }: Props) {
 
   useEffect(() => {
     void recarregar();
-    void idDoPerfil().then(setDono);
-    return acompanharSessao(setSessao);
+    setComChave(Boolean(chaveGuardada())); // chave já conferida antes neste navegador
   }, []);
 
   // Acabou de entrar: liga o modo de edição direto
@@ -132,7 +128,7 @@ export default function MinhasViagens({ aoFechar, aoMudar }: Props) {
   }
 
   async function salvar(nova: NovaViagem) {
-    await salvarViagem(nova, sessao!.user.id, editando?.viagem?.id);
+    await salvarViagem(nova, editando?.viagem?.id);
     setEditando(null);
     setAbertos((atual) => new Set(atual).add(chaveDoAno(nova.ano))); // mostra onde ela entrou
     await recarregar();
@@ -181,7 +177,7 @@ export default function MinhasViagens({ aoFechar, aoMudar }: Props) {
           </div>
         </div>
 
-        {pedindoEntrada && !podeEditar && <Entrada sessao={sessao} aoCancelar={() => setPedindoEntrada(false)} />}
+        {pedindoEntrada && !podeEditar && <Entrada aoEntrar={() => setComChave(true)} aoCancelar={() => setPedindoEntrada(false)} />}
 
         {editavel && (
           <div className={estilos.faixaEdicao}>
@@ -270,14 +266,15 @@ export default function MinhasViagens({ aoFechar, aoMudar }: Props) {
         </div>
       </div>
 
-      {sessao && (
+      {podeEditar && (
         <footer className={estilos.rodape}>
-          <span>{podeEditar ? `Conectado como ${sessao.user.email}` : "Esta conta não é a dona deste mapa."}</span>
+          <span>Este navegador está liberado para editar.</span>
           <button
             className={estilos.link}
             onClick={() => {
               setModoEdicao(false);
-              void sair();
+              setComChave(false);
+              esquecerChave();
             }}
           >
             Sair
@@ -294,52 +291,39 @@ export default function MinhasViagens({ aoFechar, aoMudar }: Props) {
   );
 }
 
-// Para editar, o site precisa saber que é o dono do mapa: um link no e-mail, uma vez só
-// (depois o navegador fica conectado)
-function Entrada({ sessao, aoCancelar }: { sessao: Session | null; aoCancelar: () => void }) {
-  const [email, setEmail] = useState("");
-  const [estado, setEstado] = useState<"" | "enviando" | "enviado" | "erro">("");
-
-  if (sessao) {
-    return (
-      <div className={estilos.faixaEdicao}>
-        <span>Esta conta não é a dona deste mapa.</span>
-        <button className={estilos.link} onClick={() => void sair()}>
-          Sair
-        </button>
-      </div>
-    );
-  }
+// Para editar, a chave do mapa (uma vez por navegador: depois ela fica guardada)
+function Entrada({ aoEntrar, aoCancelar }: { aoEntrar: () => void; aoCancelar: () => void }) {
+  const [chave, setChave] = useState("");
+  const [estado, setEstado] = useState<"" | "conferindo" | "erro">("");
+  const [mensagem, setMensagem] = useState("");
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
-    setEstado("enviando");
+    setEstado("conferindo");
     try {
-      await pedirLink(email.trim());
-      setEstado("enviado");
+      const erro = await entrarComChave(chave);
+      if (!erro) return aoEntrar();
+      setMensagem(erro);
     } catch (erro) {
-      console.error("Não consegui enviar o link", erro);
-      setEstado("erro");
+      console.error("Não consegui conferir a chave", erro);
+      setMensagem("Não consegui falar com o servidor. Tente de novo.");
     }
+    setEstado("erro");
   }
 
   return (
     <div className={estilos.faixaEdicao}>
-      {estado === "enviado" ? (
-        <span>Pronto: abra o link que chegou em {email}. Ele abre o Órbita já conectado: é só voltar em Minhas viagens e clicar em Editar.</span>
-      ) : (
-        <form className={estilos.entrar} onSubmit={enviar}>
-          <span>Para editar, confirme que é você: mandamos um link para o seu e-mail (só na primeira vez).</span>
-          <input type="email" required placeholder="Seu e-mail" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="E-mail" autoFocus />
-          <button className={estilos.botaoPrincipal} disabled={estado === "enviando"}>
-            {estado === "enviando" ? "Enviando…" : "Enviar link"}
-          </button>
-          <button type="button" className={estilos.link} onClick={aoCancelar}>
-            Cancelar
-          </button>
-          {estado === "erro" && <span className={estilos.aviso}>Não deu certo. Confira o e-mail ou tente daqui a um minuto.</span>}
-        </form>
-      )}
+      <form className={estilos.entrar} onSubmit={enviar}>
+        <span>Para editar, digite a chave do mapa (só na primeira vez neste navegador).</span>
+        <input type="password" required placeholder="Chave" value={chave} onChange={(e) => setChave(e.target.value)} aria-label="Chave" autoFocus />
+        <button className={estilos.botaoPrincipal} disabled={estado === "conferindo"}>
+          {estado === "conferindo" ? "Conferindo…" : "Entrar"}
+        </button>
+        <button type="button" className={estilos.link} onClick={aoCancelar}>
+          Cancelar
+        </button>
+        {estado === "erro" && <span className={estilos.aviso}>{mensagem}</span>}
+      </form>
     </div>
   );
 }

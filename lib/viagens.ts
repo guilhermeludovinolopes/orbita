@@ -1,4 +1,3 @@
-import type { Session } from "@supabase/supabase-js";
 import { DETALHE_PAISES } from "./detalhe-paises";
 import paisesMundo from "./paises-mundo.json";
 import { obterSupabase } from "./supabase";
@@ -47,7 +46,8 @@ const daLinha = (l: Linha): Viagem => ({
   observacao: l.observacao as string | null,
 });
 
-const paraLinha = (v: NovaViagem) => ({
+// Também usada pela rota que grava (app/api/viagens)
+export const paraLinha = (v: NovaViagem) => ({
   ano: v.ano,
   mes: v.ano ? v.mes : null,
   dia: v.ano && v.mes ? v.dia : null,
@@ -62,12 +62,6 @@ const paraLinha = (v: NovaViagem) => ({
   observacao: v.observacao?.trim() || null,
 });
 
-// Dono do mapa público: só ele vê os botões de editar
-export async function idDoPerfil(): Promise<string | null> {
-  const { data } = await obterSupabase().from("perfis").select("id").eq("usuario", PERFIL_DO_SITE).maybeSingle();
-  return data?.id ?? null;
-}
-
 export async function carregarViagens(): Promise<Viagem[]> {
   const { data, error } = await obterSupabase()
     .from("visitas")
@@ -77,37 +71,55 @@ export async function carregarViagens(): Promise<Viagem[]> {
   return (data as Linha[]).map(daLinha);
 }
 
-export async function salvarViagem(viagem: NovaViagem, usuarioId: string, id?: string): Promise<void> {
-  const tabela = obterSupabase().from("visitas");
-  const { error } = id
-    ? await tabela.update(paraLinha(viagem)).eq("id", id)
-    : await tabela.insert({ ...paraLinha(viagem), usuario_id: usuarioId });
-  if (error) throw error;
+// ---------- Edição com a chave ----------
+// Quem sabe a chave (definida na Vercel e no .env.local) pode mexer. Ela fica guardada neste navegador
+// depois de conferida, e vai em cada gravação para as rotas de app/api, que conferem de novo.
+
+const CHAVE_GUARDADA = "orbita-chave";
+
+export function chaveGuardada(): string | null {
+  try {
+    return localStorage.getItem(CHAVE_GUARDADA);
+  } catch {
+    return null;
+  }
+}
+
+// Confere a chave no servidor e guarda neste navegador; devolve a mensagem de erro, ou null se deu certo
+export async function entrarComChave(chave: string): Promise<string | null> {
+  const resposta = await fetch("/api/chave", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ chave }) });
+  if (!resposta.ok) return ((await resposta.json().catch(() => ({}))) as { erro?: string }).erro ?? "Não deu certo.";
+  try {
+    localStorage.setItem(CHAVE_GUARDADA, chave);
+  } catch {
+    // sem armazenamento (janela anônima): vale até fechar a página
+  }
+  return null;
+}
+
+export function esquecerChave(): void {
+  try {
+    localStorage.removeItem(CHAVE_GUARDADA);
+  } catch {
+    // nada guardado
+  }
+}
+
+async function gravar(metodo: "POST" | "PUT" | "DELETE", corpo?: object, id?: string, chave = chaveGuardada()): Promise<void> {
+  const resposta = await fetch(`/api/viagens${id ? `?id=${encodeURIComponent(id)}` : ""}`, {
+    method: metodo,
+    headers: { "content-type": "application/json", "x-orbita-chave": chave ?? "" },
+    body: corpo ? JSON.stringify(corpo) : undefined,
+  });
+  if (!resposta.ok) throw new Error(((await resposta.json().catch(() => ({}))) as { erro?: string }).erro ?? `Erro ${resposta.status}`);
+}
+
+export async function salvarViagem(viagem: NovaViagem, id?: string): Promise<void> {
+  await (id ? gravar("PUT", { id, viagem }) : gravar("POST", { viagem }));
 }
 
 export async function apagarViagem(id: string): Promise<void> {
-  const { error } = await obterSupabase().from("visitas").delete().eq("id", id);
-  if (error) throw error;
-}
-
-// Login por link no e-mail. Só entra quem já tem conta (não cria contas novas pelo site).
-export async function pedirLink(email: string): Promise<void> {
-  const { error } = await obterSupabase().auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: window.location.origin, shouldCreateUser: false },
-  });
-  if (error) throw error;
-}
-
-export async function sair(): Promise<void> {
-  await obterSupabase().auth.signOut();
-}
-
-export function acompanharSessao(aoMudar: (sessao: Session | null) => void): () => void {
-  const supabase = obterSupabase();
-  void supabase.auth.getSession().then(({ data }) => aoMudar(data.session));
-  const { data } = supabase.auth.onAuthStateChange((_evento, sessao) => aoMudar(sessao));
-  return () => data.subscription.unsubscribe();
+  await gravar("DELETE", undefined, id);
 }
 
 // ---------- Busca de lugares ----------
