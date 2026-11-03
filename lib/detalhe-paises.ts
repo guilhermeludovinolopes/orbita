@@ -71,6 +71,11 @@ export const DETALHE_PAISES: Record<string, DetalhePais> = {
     nomes: { estado: ["departamento", "departamentos", "um"], municipio: ["distrito", "distritos", "um"] },
     ...arquivos("py", false),
   },
+  BO: {
+    totalMunicipios: 339,
+    nomes: { estado: ["departamento", "departamentos", "um"], condado: ["província", "províncias", "uma"], municipio: ["município", "municípios", "um"] },
+    ...arquivos("bo", true),
+  },
   IE: {
     totalMunicipios: 31,
     nomes: { estado: ["província", "províncias", "uma"], condado: ["condado", "condados", "um"], municipio: ["prefeitura", "prefeituras", "uma"] },

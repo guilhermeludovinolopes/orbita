@@ -10,7 +10,7 @@
 // Uso: node scripts/gerar-indice-lugares.mjs
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
-const PASTAS = { BR: "br", US: "us", IT: "it", CH: "ch", PT: "pt", "GB-ENG": "gb-eng", IE: "ie", AR: "ar", CL: "cl", PY: "py" };
+const PASTAS = { BR: "br", US: "us", IT: "it", CH: "ch", PT: "pt", "GB-ENG": "gb-eng", IE: "ie", AR: "ar", CL: "cl", PY: "py", BO: "bo" };
 
 const ler = (arquivo) => JSON.parse(readFileSync(arquivo, "utf8")).features.map((f) => f.properties);
 
