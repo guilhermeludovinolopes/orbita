@@ -861,6 +861,76 @@ export const DETALHE_PAISES: Record<string, DetalhePais> = {
     nomes: { estado: ["país", "países", "um"], municipio: ["distrito", "distritos", "um"] },
     ...arquivos("mu", false),
   },
+  AU: {
+    totalMunicipios: 547,
+    nomes: { estado: ["estado", "estados", "um"], municipio: ["área de governo local", "áreas de governo local", "uma"] },
+    ...arquivos("au", false),
+  },
+  NZ: {
+    totalMunicipios: 88,
+    nomes: { estado: ["região", "regiões", "uma"], municipio: ["autoridade territorial", "autoridades territoriais", "uma"] },
+    ...arquivos("nz", false),
+  },
+  PG: {
+    totalMunicipios: 87,
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("pg", false),
+  },
+  FJ: {
+    totalMunicipios: 15,
+    nomes: { estado: ["divisão", "divisões", "uma"], municipio: ["província", "províncias", "uma"] },
+    ...arquivos("fj", false),
+  },
+  SB: {
+    totalMunicipios: 50,
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["distrito eleitoral", "distritos eleitorais", "um"] },
+    ...arquivos("sb", false),
+  },
+  VU: {
+    totalMunicipios: 66,
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["conselho de área", "conselhos de área", "um"] },
+    ...arquivos("vu", false),
+  },
+  TO: {
+    totalMunicipios: 23,
+    nomes: { estado: ["divisão", "divisões", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("to", false),
+  },
+  KI: {
+    totalMunicipios: 36,
+    nomes: { estado: ["grupo de ilhas", "grupos de ilhas", "um"], municipio: ["ilha", "ilhas", "uma"] },
+    ...arquivos("ki", false),
+  },
+  FM: {
+    totalMunicipios: 75,
+    nomes: { estado: ["estado", "estados", "um"], municipio: ["município", "municípios", "um"] },
+    ...arquivos("fm", false),
+  },
+  MH: {
+    totalMunicipios: 152,
+    nomes: { estado: ["atol", "atóis", "um"], municipio: ["ilha", "ilhas", "uma"] },
+    ...arquivos("mh", false),
+  },
+  WS: {
+    totalMunicipios: 43,
+    nomes: { estado: ["distrito", "distritos", "um"], municipio: ["distrito eleitoral", "distritos eleitorais", "um"] },
+    ...arquivos("ws", false),
+  },
+  TV: {
+    totalMunicipios: 30,
+    nomes: { estado: ["ilha", "ilhas", "uma"], municipio: ["aldeia", "aldeias", "uma"] },
+    ...arquivos("tv", false),
+  },
+  PW: {
+    totalMunicipios: 16,
+    nomes: { estado: ["país", "países", "um"], municipio: ["estado", "estados", "um"] },
+    ...arquivos("pw", false),
+  },
+  NR: {
+    totalMunicipios: 14,
+    nomes: { estado: ["país", "países", "um"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("nr", false),
+  },
   IE: {
     totalMunicipios: 31,
     nomes: { estado: ["província", "províncias", "uma"], condado: ["condado", "condados", "um"], municipio: ["prefeitura", "prefeituras", "uma"] },

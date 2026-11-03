@@ -7,7 +7,7 @@
 //   public/geo/<pasta>/estados.json, condados-<estado>.json (com 3 níveis) e municipios-<estado>.json
 //
 // Uso: node scripts/gerar-geoboundaries.mjs <sigla do país em PAISES> <pasta com os <ISO3>_<ADMn>.geojson>
-import { areaDaForma, forma, gravar, lerJson, pontoInterno } from "./geo-comum.mjs";
+import { areaDaForma, forma, gravar, lerJson, paraLeste, pontoInterno } from "./geo-comum.mjs";
 
 const PAISES = {
   KR: { iso3: "KOR", pasta: "kr", niveis: ["ADM1", "ADM2"] }, // província ou cidade metropolitana → si/gun/gu
@@ -31,6 +31,13 @@ const PAISES = {
   AD: { iso3: "AND", pasta: "ad", niveis: ["ADM0", "ADM1"] }, // paróquia
   SM: { iso3: "SMR", pasta: "sm", niveis: ["ADM0", "ADM1"] }, // castello
   MU: { iso3: "MUS", pasta: "mu", niveis: ["ADM0", "ADM1"] }, // distrito
+  // Oceania
+  AU: { iso3: "AUS", pasta: "au", niveis: ["ADM1", "ADM2"] }, // estado ou território → área de governo local (ABS)
+  NZ: { iso3: "NZL", pasta: "nz", niveis: ["ADM1", "ADM2"], leste: true, limpar: / Region$/ }, // região → autoridade territorial (Stats NZ)
+  WS: { iso3: "WSM", pasta: "ws", niveis: ["ADM1", "ADM2"] }, // distrito → distrito eleitoral
+  TV: { iso3: "TUV", pasta: "tv", niveis: ["ADM1", "ADM2"] }, // ilha → aldeia
+  PW: { iso3: "PLW", pasta: "pw", niveis: ["ADM0", "ADM1"] }, // estado
+  NR: { iso3: "NRU", pasta: "nr", niveis: ["ADM0", "ADM1"] }, // distrito
 };
 
 const [pais, origem] = process.argv.slice(2);
@@ -50,7 +57,9 @@ const semIlhotas = (g) => {
 const fator = cfg.simplificar ?? 1;
 const ler = (nivel) => lerJson(`${origem}/${cfg.iso3}_${nivel}.geojson`).features
   .filter((f) => f.geometry && f.properties.shapeName) // sem nome não dá para achar nem marcar (12 distritos do Turcomenistão)
-  .map((f) => (cfg.titulo ? { ...f, properties: { ...f.properties, shapeName: emTitulo(f.properties.shapeName) } } : f));
+  .map((f) => (cfg.leste ? { ...f, geometry: paraLeste(f.geometry) } : f))
+  .map((f) => (cfg.titulo ? { ...f, properties: { ...f.properties, shapeName: emTitulo(f.properties.shapeName) } } : f))
+  .map((f) => (cfg.limpar ? { ...f, properties: { ...f.properties, shapeName: f.properties.shapeName.replace(cfg.limpar, "") } } : f));
 const [nivelEstado, ...resto] = cfg.niveis;
 const comCondados = resto.length === 2;
 const estados = ler(nivelEstado);

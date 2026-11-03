@@ -60,6 +60,11 @@ export const forma = (geometria, propriedades, casas = 4, tolerancia = 0) => {
   return { type: "Feature", properties: propriedades, geometry: { type: geometria.type, coordinates: coords } };
 };
 
+// Países que atravessam o meridiano de 180° (Fiji, Kiribati, Nova Zelândia): as longitudes negativas
+// passam para o lado leste (+360), para o país não aparecer cortado nas duas pontas do mapa
+const aLeste = (c) => (typeof c[0] === "number" ? (c[0] < 0 ? [c[0] + 360, c[1]] : c) : c.map(aLeste));
+export const paraLeste = (geometria) => ({ ...geometria, coordinates: aLeste(geometria.coordinates) });
+
 export function gravar(caminho, features) {
   mkdirSync(caminho.replace(/[\\/][^\\/]+$/, ""), { recursive: true });
   const json = JSON.stringify({ type: "FeatureCollection", features });
