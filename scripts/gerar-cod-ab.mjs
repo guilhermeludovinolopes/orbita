@@ -192,6 +192,9 @@ const PAISES = {
     iso3: "vnm", pasta: "vn", nivelMunicipio: 2, comCondados: false, idioma: "VI",
     limpar: /^(Tỉnh|Thành phố|TP\.|Huyện|Quận|Thị xã) /,
   },
+  // Europa
+  UA: { iso3: "ukr", pasta: "ua", nivelMunicipio: 3, comCondados: true, idioma: "EN" }, // oblast → raion → hromada
+  BY: { iso3: "blr", pasta: "by", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // oblast → raion
 };
 
 const [pais, origem, mapaIso] = process.argv.slice(2);
