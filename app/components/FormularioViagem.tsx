@@ -53,12 +53,20 @@ export default function FormularioViagem({ viagem, anoInicial, primeiroAno, aoSa
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
+  // A lista de lugares vem aos pedaços: muda conforme a primeira palavra digitada
   useEffect(() => {
-    carregarLugares().then(setTodos, (e) => {
-      console.error("Não consegui carregar a lista de lugares", e);
-      setErro("Não consegui carregar a lista de lugares.");
-    });
-  }, []);
+    let atual = true;
+    carregarLugares(texto).then(
+      (lista) => atual && setTodos(lista),
+      (e) => {
+        console.error("Não consegui carregar a lista de lugares", e);
+        setErro("Não consegui carregar a lista de lugares.");
+      },
+    );
+    return () => {
+      atual = false;
+    };
+  }, [texto]);
 
   useEffect(() => {
     const tecla = (e: KeyboardEvent) => e.key === "Escape" && aoCancelar();

@@ -112,14 +112,10 @@ export function acompanharSessao(aoMudar: (sessao: Session | null) => void): () 
 
 // ---------- Busca de lugares ----------
 
-type Indice = Record<
-  string,
-  {
-    estados: [string, string][];
-    condados?: Record<string, [string, string][]>;
-    municipios: Record<string, ([string, string] | [string, string, string])[]>;
-  }
->;
+// Índice dividido (gerado por scripts/gerar-indice-lugares.mjs): os estados e condados num arquivo só,
+// e os municípios em pedaços pelas 2 primeiras letras de cada palavra do nome
+type Base = Record<string, { estados: [string, string][]; condados?: Record<string, [string, string][]> }>;
+type Pedaco = Record<string, Record<string, ([string, string] | [string, string, string])[]>>;
 
 export type Lugar = {
   tipo: "país" | "estado" | "município";
@@ -143,45 +139,75 @@ export const nomeDoPais = (codigo: string) => PAISES.find((p) => p.codigo === co
 export const semAcento = (texto: string) =>
   texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 
-let lugares: Promise<Lugar[]> | null = null;
+const vazio = { nivel1: null, nivel1Nome: null, condado: null, condadoNome: null, municipio: null, municipioNome: null };
 
-// Todos os lugares que dá para escolher: os 198 países e, nos países com mapa detalhado,
-// os estados e municípios (com o condado junto, para gravar no banco)
-export function carregarLugares(): Promise<Lugar[]> {
-  lugares ??= fetch("/geo/lugares.json")
-    .then((r) => r.json() as Promise<Indice>)
+let base: Promise<{ indice: Base; lugares: Lugar[] }> | null = null;
+
+// Os 198 países e, nos países com mapa detalhado, os estados: o que a busca mostra antes de baixar municípios
+function carregarBase() {
+  base ??= fetch("/geo/lugares/base.json")
+    .then((r) => r.json() as Promise<Base>)
     .then((indice) => {
-      const lista: Lugar[] = [];
-      const vazio = { nivel1: null, nivel1Nome: null, condado: null, condadoNome: null, municipio: null, municipioNome: null };
-      for (const p of PAISES) {
-        lista.push({ ...vazio, tipo: "país", pais: p.codigo, paisNome: p.nome, nome: p.nome, rotulo: "país", onde: "", chave: semAcento(p.nome) });
-      }
+      const lugares: Lugar[] = PAISES.map((p) => (
+        { ...vazio, tipo: "país", pais: p.codigo, paisNome: p.nome, nome: p.nome, rotulo: "país", onde: "", chave: semAcento(p.nome) }
+      ));
       for (const [pais, item] of Object.entries(indice)) {
         const paisNome = nomeDoPais(pais);
-        const nomes = DETALHE_PAISES[pais].nomes;
         for (const [nivel1, nivel1Nome] of item.estados) {
-          const base = { ...vazio, pais, paisNome, nivel1, nivel1Nome };
-          lista.push({ ...base, tipo: "estado", nome: nivel1Nome, rotulo: nomes.estado[0], onde: paisNome, chave: semAcento(nivel1Nome) });
-          const condados = new Map(item.condados?.[nivel1] ?? []);
-          for (const [municipio, municipioNome, condado] of item.municipios[nivel1] ?? []) {
-            lista.push({
-              ...base,
-              tipo: "município",
-              condado: condado ?? null,
-              condadoNome: condado ? (condados.get(condado) ?? null) : null,
-              municipio,
-              municipioNome,
-              nome: municipioNome,
-              rotulo: nomes.municipio[0],
-              onde: `${nivel1Nome}, ${paisNome}`,
-              chave: semAcento(municipioNome),
-            });
-          }
+          lugares.push({
+            ...vazio, tipo: "estado", pais, paisNome, nivel1, nivel1Nome,
+            nome: nivel1Nome, rotulo: DETALHE_PAISES[pais].nomes.estado[0], onde: paisNome, chave: semAcento(nivel1Nome),
+          });
         }
       }
-      return lista;
+      return { indice, lugares };
     });
-  return lugares;
+  return base;
+}
+
+// Pedaço do índice de municípios para a primeira palavra da busca: "sao pa" → m-sa.json.
+// Fora do a-z e 0-9, o arquivo leva os códigos hexadecimais das letras (mesma regra do script)
+const pedacos = new Map<string, Promise<Lugar[]>>();
+function carregarPedaco(chave: string): Promise<Lugar[]> {
+  const arquivo = /^[a-z0-9]+$/.test(chave) ? `m-${chave}` : `m-u${[...chave].map((l) => l.codePointAt(0)!.toString(16)).join("-")}`;
+  if (!pedacos.has(chave)) {
+    pedacos.set(chave, Promise.all([carregarBase(), fetch(`/geo/lugares/${arquivo}.json`).then((r) => (r.ok ? (r.json() as Promise<Pedaco>) : ({} as Pedaco)))]) // sem arquivo: nenhum município com essas letras
+      .then(([{ indice }, pedaco]) => {
+        const lugares: Lugar[] = [];
+        for (const [pais, porEstado] of Object.entries(pedaco)) {
+          const paisNome = nomeDoPais(pais);
+          const nomes = DETALHE_PAISES[pais].nomes;
+          const estados = new Map(indice[pais].estados);
+          for (const [nivel1, municipios] of Object.entries(porEstado)) {
+            const nivel1Nome = estados.get(nivel1) ?? nivel1;
+            const condados = new Map(indice[pais].condados?.[nivel1] ?? []);
+            for (const [municipio, municipioNome, condado] of municipios) {
+              lugares.push({
+                tipo: "município", pais, paisNome, nivel1, nivel1Nome,
+                condado: condado ?? null,
+                condadoNome: condado ? (condados.get(condado) ?? null) : null,
+                municipio,
+                municipioNome,
+                nome: municipioNome,
+                rotulo: nomes.municipio[0],
+                onde: `${nivel1Nome}, ${paisNome}`,
+                chave: semAcento(municipioNome),
+              });
+            }
+          }
+        }
+        return lugares;
+      }));
+  }
+  return pedacos.get(chave)!;
+}
+
+// Os lugares que podem casar com a busca: países, estados e os municípios do pedaço da primeira palavra
+// (com 2 letras ou mais). Acha "Paulo" em São Paulo, mas não um pedaço do meio de uma palavra
+export async function carregarLugares(texto = ""): Promise<Lugar[]> {
+  const { lugares } = await carregarBase();
+  const palavra = semAcento(texto).split(/[^\p{L}\p{N}]+/u).find((p) => p.length >= 2);
+  return palavra ? [...lugares, ...(await carregarPedaco(palavra.slice(0, 2)))] : lugares;
 }
 
 // Quem começa com o texto vem antes de quem só contém; países e estados antes dos municípios

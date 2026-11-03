@@ -23,7 +23,7 @@ const PAISES = {
   GE: { iso3: "GEO", pasta: "ge", niveis: ["ADM1", "ADM2"] }, // região → município
   KW: { iso3: "KWT", pasta: "kw", niveis: ["ADM1", "ADM2"] }, // governadoria → área
   // sujeito federal → distrito (raion) ou cidade; o Ártico pesa: simplifica 4× mais e tira as ilhotas
-  RU: { iso3: "RUS", pasta: "ru", niveis: ["ADM1", "ADM2"], simplificar: 4, ilhotas: 0.01 },
+  RU: { iso3: "RUS", pasta: "ru", niveis: ["ADM1", "ADM2"], simplificar: 4, ilhotas: 0.01, leste: true }, // Chukotka cruza os 180°
   BA: { iso3: "BIH", pasta: "ba", niveis: ["ADM1", "ADM2", "ADM3"] }, // entidade → cantão ou região → município
   // Países sem 1º nível acima do município: o país inteiro é o "estado"
   ME: { iso3: "MNE", pasta: "me", niveis: ["ADM0", "ADM1"] }, // município
@@ -31,6 +31,22 @@ const PAISES = {
   AD: { iso3: "AND", pasta: "ad", niveis: ["ADM0", "ADM1"] }, // paróquia
   SM: { iso3: "SMR", pasta: "sm", niveis: ["ADM0", "ADM1"] }, // castello
   MU: { iso3: "MUS", pasta: "mu", niveis: ["ADM0", "ADM1"] }, // distrito
+  // Américas: Uruguai (sem a camada oficial da DINOT, fora do ar) e os países com um nível só
+  UY: { iso3: "URY", pasta: "uy", niveis: ["ADM1", "ADM2"] }, // departamento → município
+  BZ: { iso3: "BLZ", pasta: "bz", niveis: ["ADM1", "ADM2"] }, // distrito → circunscrição eleitoral
+  GY: { iso3: "GUY", pasta: "gy", niveis: ["ADM0", "ADM1"] }, // região
+  BS: { iso3: "BHS", pasta: "bs", niveis: ["ADM0", "ADM1"] }, // distrito
+  TT: { iso3: "TTO", pasta: "tt", niveis: ["ADM0", "ADM1"] }, // corporação municipal
+  BB: { iso3: "BRB", pasta: "bb", niveis: ["ADM0", "ADM1"] }, // paróquia
+  VC: { iso3: "VCT", pasta: "vc", niveis: ["ADM0", "ADM1"] }, // paróquia
+  GD: { iso3: "GRD", pasta: "gd", niveis: ["ADM0", "ADM1"] }, // paróquia
+  AG: { iso3: "ATG", pasta: "ag", niveis: ["ADM0", "ADM1"] }, // paróquia
+  DM: { iso3: "DMA", pasta: "dm", niveis: ["ADM0", "ADM1"] }, // paróquia
+  KN: { iso3: "KNA", pasta: "kn", niveis: ["ADM0", "ADM1"] }, // paróquia
+  LC: { iso3: "LCA", pasta: "lc", niveis: ["ADM0", "ADM1"] }, // distrito (quarter)
+  // Ásia: países com um nível só
+  BH: { iso3: "BHR", pasta: "bh", niveis: ["ADM0", "ADM1"] }, // governadoria
+  AE: { iso3: "ARE", pasta: "ae", niveis: ["ADM0", "ADM1"] }, // emirado
   // Oceania
   AU: { iso3: "AUS", pasta: "au", niveis: ["ADM1", "ADM2"] }, // estado ou território → área de governo local (ABS)
   NZ: { iso3: "NZL", pasta: "nz", niveis: ["ADM1", "ADM2"], leste: true, limpar: / Region$/ }, // região → autoridade territorial (Stats NZ)
@@ -41,6 +57,7 @@ const PAISES = {
 };
 
 const [pais, origem] = process.argv.slice(2);
+const nomesPaises = new Map(lerJson("lib/paises-mundo.json").map((p) => [p.codigo, p.nome]));
 const cfg = PAISES[pais];
 if (!cfg) throw new Error(`País sem configuração: ${pais}`);
 
@@ -105,7 +122,9 @@ estados.forEach((e, i) => {
   kb += gravar(`public/geo/${cfg.pasta}/municipios-${codigo}.json`, doEstado.map(({ m, condado }) =>
     forma(semIlhotas(m.geometry), { codigo: m.properties.shapeID, nome: m.properties.shapeName, ...(condado ? { condado } : {}) }, 3, 0.001 * fator)));
   total += doEstado.length;
-  saida.push(forma(semIlhotas(e.geometry), { codigo, nome: e.properties.shapeName, total: doEstado.length }, 3, 0.004 * fator));
+  // País inteiro como "estado" (ADM0): o nome em português do globo, não o oficial em inglês
+  const nome = nivelEstado === "ADM0" ? (nomesPaises.get(pais) ?? e.properties.shapeName) : e.properties.shapeName;
+  saida.push(forma(semIlhotas(e.geometry), { codigo, nome, total: doEstado.length }, 3, 0.004 * fator));
 });
 kb += gravar(`public/geo/${cfg.pasta}/estados.json`, saida);
 console.log(`${pais}: ${saida.length} estados, ${condados.length} condados, ${total} municípios (${semEstado + semCondado} fora de qualquer área), ${kb.toFixed(0)} KB`);
