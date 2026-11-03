@@ -195,6 +195,25 @@ const PAISES = {
   // Europa
   UA: { iso3: "ukr", pasta: "ua", nivelMunicipio: 3, comCondados: true, idioma: "EN" }, // oblast → raion → hromada
   BY: { iso3: "blr", pasta: "by", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // oblast → raion
+  // África: 1º nível → 2º nível; com o nível do meio (condado) onde o 3º nível é o município
+  ...Object.fromEntries(Object.entries({
+    AO: ["ago", 2], DZ: ["dza", 2], BJ: ["ben", 2], BW: ["bwa", 2], BF: ["bfa", 3], BI: ["bdi", 2], CV: ["cpv", 2],
+    CM: ["cmr", 3], TD: ["tcd", 2], KM: ["com", 2], CG: ["cog", 2], CI: ["civ", 3], DJ: ["dji", 2], EG: ["egy", 2], ER: ["eri", 2],
+    ET: ["eth", 3], GA: ["gab", 2], GM: ["gmb", 2], GH: ["gha", 2], GN: ["gin", 2], GQ: ["gnq", 2], GW: ["gnb", 2],
+    LR: ["lbr", 2], LY: ["lby", 2], MG: ["mdg", 3], MW: ["mwi", 2], ML: ["mli", 3], MA: ["mar", 3], MR: ["mrt", 2], MZ: ["moz", 2],
+    NA: ["nam", 2], NE: ["ner", 3], NG: ["nga", 2], KE: ["ken", 2], CF: ["caf", 2], CD: ["cod", 2], RW: ["rwa", 3], ST: ["stp", 2],
+    SC: ["syc", 2], SN: ["sen", 2], SL: ["sle", 3], SO: ["som", 2], SZ: ["swz", 2], SD: ["sdn", 2], SS: ["ssd", 2], TZ: ["tza", 2],
+    TG: ["tgo", 2], UG: ["uga", 2], ZM: ["zmb", 2], ZW: ["zwe", 2],
+  }).map(([pais, [iso3, nivelMunicipio]]) => [pais, { iso3, pasta: pais.toLowerCase(), nivelMunicipio, comCondados: nivelMunicipio === 3 }])),
+  // África do Sul: o geoBoundaries usa números; a ISO usa letras (códigos de província da Stats SA 1 a 9)
+  ZA: {
+    iso3: "zaf", pasta: "za", nivelMunicipio: 3, comCondados: true,
+    iso: { 1: "ZA-WC", 2: "ZA-EC", 3: "ZA-NC", 4: "ZA-FS", 5: "ZA-KZN", 6: "ZA-NW", 7: "ZA-GP", 8: "ZA-MP", 9: "ZA-LP" },
+    nomes: { 3: "Northern Cape" }, // a base escreve "Nothern"
+  },
+  LS: { iso3: "lso", pasta: "ls", nivelMunicipio: 2, comCondados: false, prefixo: 2 }, // distrito → conselho comunitário
+  // Tunísia: o 1º nível da base são 6 regiões; o estado é a governadoria (24) e o município, a delegação
+  TN: { iso3: "tun", pasta: "tn", nivelEstado: 2, nivelMunicipio: 3, comCondados: false },
 };
 
 const [pais, origem, mapaIso] = process.argv.slice(2);
@@ -208,6 +227,7 @@ const areasIso = (mapaIso ? lerJson(mapaIso).features : [])
   .map((f) => ({ ...f, properties: { shapeISO: (f.properties.shapeISO ?? "").replace("_", "-") } })) // "AF_KAN" → "AF-KAN"
   .filter((f) => /^[A-Z]{2}-[A-Z0-9]+$/.test(f.properties.shapeISO));
 const isoUsados = new Set();
+const isosExistentes = new Set(areasIso.map((a) => a.properties.shapeISO));
 function isoDoMapa(estado, num) {
   const vertices = (estado.geometry.type === "Polygon" ? [estado.geometry.coordinates] : estado.geometry.coordinates).flatMap((p) => p[0]);
   let [x0, x1, y0, y1] = [Infinity, -Infinity, Infinity, -Infinity];
@@ -221,17 +241,27 @@ function isoDoMapa(estado, num) {
   }
   const iso = [...votos].sort((a, b) => b[1] - a[1])[0]?.[0]
     ?? areaDaForma(estado.geometry, areasIso, [pontoInterno(estado.geometry)])?.properties.shapeISO;
-  if (!iso || isoUsados.has(iso)) return `${pais}-${num}`;
-  isoUsados.add(iso);
-  return iso;
+  if (iso && !isoUsados.has(iso)) {
+    isoUsados.add(iso);
+    return iso;
+  }
+  // Reserva com o código nacional; com um X se ele coincidir com o ISO de outro estado (Mbeya, TZ-12, é Lindi na ISO)
+  const reserva = `${pais}-${num}`;
+  return isosExistentes.has(reserva) ? `${pais}-X${num}` : reserva;
 }
 
 const ler = (nivel) => lerJson(`${origem}/${cfg.iso3}_adm${nivel}.geojson`).features;
-const codigo = (f, nivel) => f.properties[`ADM${nivel}_PCODE`].replace(/^[A-Z]+/, ""); // sem o prefixo do país (PE, KAZ...)
+// Sem o prefixo do país (PE, KAZ...); no Lesoto a letra seguinte já é parte do código (LSG01 → G01)
+const codigo = (f, nivel) => {
+  const pcode = f.properties[`ADM${nivel}_PCODE`];
+  return cfg.prefixo ? pcode.slice(cfg.prefixo) : pcode.replace(/^[A-Z]+/, "");
+};
 // Nomes todos em maiúsculas (Turquia): "KASTAMONU" → "Kastamonu", com as regras de maiúsculas da língua
 const emTitulo = (t) => t.toLocaleLowerCase(cfg.titulo).replace(/(^|[\s(-])(\p{L})/gu, (_, a, l) => a + l.toLocaleUpperCase(cfg.titulo));
+// Sem idioma na configuração, usa o primeiro que a base tiver (a África mistura inglês, francês e português)
 const nome = (f, nivel) => {
-  const n = f.properties[`ADM${nivel}_${cfg.idioma ?? "ES"}`];
+  const p = f.properties;
+  const n = cfg.idioma ? p[`ADM${nivel}_${cfg.idioma}`] : ["ES", "PT", "FR", "EN"].map((l) => p[`ADM${nivel}_${l}`]).find(Boolean);
   return cfg.titulo ? emTitulo(n) : n;
 };
 

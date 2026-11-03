@@ -30,6 +30,7 @@ const PAISES = {
   MD: { iso3: "MDA", pasta: "md", niveis: ["ADM0", "ADM1"] }, // distrito (raion) ou município
   AD: { iso3: "AND", pasta: "ad", niveis: ["ADM0", "ADM1"] }, // paróquia
   SM: { iso3: "SMR", pasta: "sm", niveis: ["ADM0", "ADM1"] }, // castello
+  MU: { iso3: "MUS", pasta: "mu", niveis: ["ADM0", "ADM1"] }, // distrito
 };
 
 const [pais, origem] = process.argv.slice(2);
