@@ -931,6 +931,76 @@ export const DETALHE_PAISES: Record<string, DetalhePais> = {
     nomes: { estado: ["país", "países", "um"], municipio: ["distrito", "distritos", "um"] },
     ...arquivos("nr", false),
   },
+  UY: {
+    totalMunicipios: 125,
+    nomes: { estado: ["departamento", "departamentos", "um"], municipio: ["município", "municípios", "um"] },
+    ...arquivos("uy", false),
+  },
+  BZ: {
+    totalMunicipios: 31,
+    nomes: { estado: ["distrito", "distritos", "um"], municipio: ["circunscrição eleitoral", "circunscrições eleitorais", "uma"] },
+    ...arquivos("bz", false),
+  },
+  GY: {
+    totalMunicipios: 10,
+    nomes: { estado: ["país", "países", "um"], municipio: ["região", "regiões", "uma"] },
+    ...arquivos("gy", false),
+  },
+  BS: {
+    totalMunicipios: 28,
+    nomes: { estado: ["país", "países", "um"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("bs", false),
+  },
+  TT: {
+    totalMunicipios: 14,
+    nomes: { estado: ["país", "países", "um"], municipio: ["corporação municipal", "corporações municipais", "uma"] },
+    ...arquivos("tt", false),
+  },
+  BB: {
+    totalMunicipios: 11,
+    nomes: { estado: ["país", "países", "um"], municipio: ["paróquia", "paróquias", "uma"] },
+    ...arquivos("bb", false),
+  },
+  VC: {
+    totalMunicipios: 6,
+    nomes: { estado: ["país", "países", "um"], municipio: ["paróquia", "paróquias", "uma"] },
+    ...arquivos("vc", false),
+  },
+  GD: {
+    totalMunicipios: 7,
+    nomes: { estado: ["país", "países", "um"], municipio: ["paróquia", "paróquias", "uma"] },
+    ...arquivos("gd", false),
+  },
+  AG: {
+    totalMunicipios: 8,
+    nomes: { estado: ["país", "países", "um"], municipio: ["paróquia", "paróquias", "uma"] },
+    ...arquivos("ag", false),
+  },
+  DM: {
+    totalMunicipios: 10,
+    nomes: { estado: ["país", "países", "um"], municipio: ["paróquia", "paróquias", "uma"] },
+    ...arquivos("dm", false),
+  },
+  KN: {
+    totalMunicipios: 14,
+    nomes: { estado: ["país", "países", "um"], municipio: ["paróquia", "paróquias", "uma"] },
+    ...arquivos("kn", false),
+  },
+  LC: {
+    totalMunicipios: 10,
+    nomes: { estado: ["país", "países", "um"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("lc", false),
+  },
+  BH: {
+    totalMunicipios: 4,
+    nomes: { estado: ["país", "países", "um"], municipio: ["governadoria", "governadorias", "uma"] },
+    ...arquivos("bh", false),
+  },
+  AE: {
+    totalMunicipios: 7,
+    nomes: { estado: ["país", "países", "um"], municipio: ["emirado", "emirados", "um"] },
+    ...arquivos("ae", false),
+  },
   IE: {
     totalMunicipios: 31,
     nomes: { estado: ["província", "províncias", "uma"], condado: ["condado", "condados", "um"], municipio: ["prefeitura", "prefeituras", "uma"] },
