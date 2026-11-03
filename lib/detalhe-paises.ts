@@ -76,6 +76,31 @@ export const DETALHE_PAISES: Record<string, DetalhePais> = {
     nomes: { estado: ["departamento", "departamentos", "um"], condado: ["província", "províncias", "uma"], municipio: ["município", "municípios", "um"] },
     ...arquivos("bo", true),
   },
+  PE: {
+    totalMunicipios: 1873, // distritos da base do IGN (1.891 hoje no INEI; os criados depois não vêm no mapa)
+    nomes: { estado: ["departamento", "departamentos", "um"], condado: ["província", "províncias", "uma"], municipio: ["distrito", "distritos", "um"] },
+    ...arquivos("pe", true),
+  },
+  EC: {
+    totalMunicipios: 221,
+    nomes: { estado: ["província", "províncias", "uma"], municipio: ["cantão", "cantões", "um"] },
+    ...arquivos("ec", false),
+  },
+  CO: {
+    totalMunicipios: 1122, // municípios e áreas não municipalizadas do DANE
+    nomes: { estado: ["departamento", "departamentos", "um"], municipio: ["município", "municípios", "um"] },
+    ...arquivos("co", false),
+  },
+  VE: {
+    totalMunicipios: 335,
+    nomes: { estado: ["estado", "estados", "um"], municipio: ["município", "municípios", "um"] },
+    ...arquivos("ve", false),
+  },
+  SR: {
+    totalMunicipios: 62,
+    nomes: { estado: ["distrito", "distritos", "um"], municipio: ["ressort", "ressorts", "um"] },
+    ...arquivos("sr", false),
+  },
   IE: {
     totalMunicipios: 31,
     nomes: { estado: ["província", "províncias", "uma"], condado: ["condado", "condados", "um"], municipio: ["prefeitura", "prefeituras", "uma"] },
