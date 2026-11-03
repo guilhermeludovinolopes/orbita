@@ -7,7 +7,7 @@ import { existsSync, readFileSync } from "node:fs";
 const env = Object.fromEntries(
   readFileSync(".env.local", "utf8").split(/\r?\n/).filter((l) => l.includes("=")).map((l) => l.split("=").map((s) => s.trim())),
 );
-const PASTAS = { BR: "br", US: "us", IT: "it", CH: "ch", PT: "pt", "GB-ENG": "gb-eng", IE: "ie", AR: "ar", CL: "cl", PY: "py", BO: "bo" };
+const PASTAS = { BR: "br", US: "us", IT: "it", CH: "ch", PT: "pt", "GB-ENG": "gb-eng", IE: "ie", AR: "ar", CL: "cl", PY: "py", BO: "bo", PE: "pe", EC: "ec", CO: "co", VE: "ve" };
 
 const r = await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/visitas?select=pais_codigo,nivel1_codigo,condado_codigo,nivel2_codigo,nivel2_nome`, {
   headers: { apikey: env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY },
