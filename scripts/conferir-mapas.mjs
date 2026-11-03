@@ -7,7 +7,7 @@ import { existsSync, readFileSync } from "node:fs";
 const env = Object.fromEntries(
   readFileSync(".env.local", "utf8").split(/\r?\n/).filter((l) => l.includes("=")).map((l) => l.split("=").map((s) => s.trim())),
 );
-const PASTAS = { BR: "br", US: "us", IT: "it", CH: "ch", PT: "pt", "GB-ENG": "gb-eng", IE: "ie", AR: "ar", CL: "cl", PY: "py", BO: "bo", PE: "pe", EC: "ec", CO: "co", VE: "ve", SR: "sr", MX: "mx", GT: "gt", HN: "hn", SV: "sv", NI: "ni", CR: "cr", PA: "pa", CU: "cu", DO: "do", HT: "ht", JM: "jm", CA: "ca" };
+const PASTAS = { BR: "br", US: "us", IT: "it", CH: "ch", PT: "pt", "GB-ENG": "gb-eng", IE: "ie", AR: "ar", CL: "cl", PY: "py", BO: "bo", PE: "pe", EC: "ec", CO: "co", VE: "ve", SR: "sr", MX: "mx", GT: "gt", HN: "hn", SV: "sv", NI: "ni", CR: "cr", PA: "pa", CU: "cu", DO: "do", HT: "ht", JM: "jm", CA: "ca", JP: "jp", KR: "kr", IN: "in", IL: "il", JO: "jo", TJ: "tj", TM: "tm", SG: "sg", BN: "bn", SA: "sa", AZ: "az", GE: "ge", KW: "kw", AF: "af", AM: "am", BD: "bd", BT: "bt", KH: "kh", QA: "qa", KZ: "kz", CN: "cn", KP: "kp", PH: "ph", YE: "ye", ID: "id", IR: "ir", IQ: "iq", LA: "la", LB: "lb", MY: "my", MV: "mv", MN: "mn", MM: "mm", NP: "np", OM: "om", PS: "ps", PK: "pk", KG: "kg", SY: "sy", LK: "lk", TH: "th", TL: "tl", TR: "tr", UZ: "uz", VN: "vn" };
 
 const r = await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/visitas?select=pais_codigo,nivel1_codigo,condado_codigo,nivel2_codigo,nivel2_nome`, {
   headers: { apikey: env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY },

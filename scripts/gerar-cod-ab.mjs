@@ -7,8 +7,8 @@
 //   public/geo/<pasta>/condados-<estado>.json      nível intermediário, só onde existe (províncias do Peru)
 //   public/geo/<pasta>/municipios-<estado>.json    municípios, com o condado quando houver
 //
-// Uso: node scripts/gerar-cod-ab.mjs <sigla do país em PAISES> <pasta com os <iso3>_admN.geojson>
-import { forma, gravar, lerJson, normalizar } from "./geo-comum.mjs";
+// Uso: node scripts/gerar-cod-ab.mjs <sigla do país em PAISES> <pasta com os <iso3>_admN.geojson> [ADM1 do geoBoundaries, para o ISO]
+import { areaDaForma, areaDoPonto, forma, gravar, lerJson, normalizar, pontoDentro, pontoInterno } from "./geo-comum.mjs";
 
 const PAISES = {
   // Peru (IGN/INEI): departamento → província → distrito
@@ -122,7 +122,7 @@ const PAISES = {
   },
   // República Dominicana (ONE): província → município (as regiões, o 1º nível da base, ficam de fora)
   DO: {
-    iso3: "dom", pasta: "do", nivelEstado: 2, nivelMunicipio: 3, comCondados: false, prefixo: /^(Provincia|Municipio) /,
+    iso3: "dom", pasta: "do", nivelEstado: 2, nivelMunicipio: 3, comCondados: false, limpar: /^(Provincia|Municipio) /,
     isoPorNome: Object.fromEntries([
       "distritonacional", "azua", "baoruco", "barahona", "dajabon", "duarte", "eliaspina", "elseibo", "espaillat", "independencia", "laaltagracia",
       "laromana", "lavega", "mariatrinidadsanchez", "montecristi", "pedernales", "peravia", "puertoplata", "hermanasmirabal", "samana",
@@ -146,23 +146,99 @@ const PAISES = {
       "saintelizabeth", "manchester", "clarendon", "saintcatherine",
     ].map((n, i) => [n, [`JM-${String(i + 1).padStart(2, "0")}`]])),
   },
+  // Ásia. Sem tabela ISO: o código do 1º nível vem do geoBoundaries (3º argumento)
+  AF: { iso3: "afg", pasta: "af", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // província → distrito
+  AM: { iso3: "arm", pasta: "am", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // província (marz) → distrito
+  BD: { iso3: "bgd", pasta: "bd", nivelMunicipio: 3, comCondados: true, idioma: "EN" }, // divisão → distrito → upazila
+  BT: { iso3: "btn", pasta: "bt", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // dzongkhag → gewog
+  KH: { iso3: "khm", pasta: "kh", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // província → distrito
+  QA: { iso3: "qat", pasta: "qa", nivelMunicipio: 2, comCondados: false, idioma: "EN", limpar: / Municipality$/ }, // município → zona
+  KZ: { iso3: "kaz", pasta: "kz", nivelMunicipio: 2, comCondados: false, idioma: "EN", limpar: / (Region|District)$/ }, // região → distrito
+  // China (sem Taiwan, que no globo é outra área): província → prefeitura
+  CN: {
+    iso3: "chn", pasta: "cn", nivelMunicipio: 2, comCondados: false, idioma: "EN", excluir: /^CN071/,
+    iso: Object.fromEntries(Object.entries({
+      11: "BJ", 12: "TJ", 13: "HE", 14: "SX", 15: "NM", 21: "LN", 22: "JL", 23: "HL", 31: "SH", 32: "JS", 33: "ZJ", 34: "AH", 35: "FJ", 36: "JX",
+      37: "SD", 41: "HA", 42: "HB", 43: "HN", 44: "GD", 45: "GX", 46: "HI", 50: "CQ", 51: "SC", 52: "GZ", 53: "YN", 54: "XZ", 61: "SN", 62: "GS",
+      63: "QH", 64: "NX", 65: "XJ", 81: "HK", 82: "MO",
+    }).map(([n, c]) => [`0${n}`, `CN-${c}`])),
+    limpar: / ([Pp]rovince|Autonomous Region|Municipality|Special Administrative Region)$/,
+  },
+  KP: { iso3: "prk", pasta: "kp", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // província → condado ou cidade
+  PH: { iso3: "phl", pasta: "ph", nivelMunicipio: 3, comCondados: true, idioma: "EN" }, // região → província → município ou cidade
+  YE: { iso3: "yem", pasta: "ye", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // governadoria → distrito
+  ID: { iso3: "idn", pasta: "id", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // província → regência ou cidade
+  IR: { iso3: "irn", pasta: "ir", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // província → condado (shahrestan)
+  IQ: { iso3: "irq", pasta: "iq", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // governadoria → distrito
+  LA: { iso3: "lao", pasta: "la", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // província → distrito
+  LB: { iso3: "lbn", pasta: "lb", nivelMunicipio: 2, comCondados: false, idioma: "EN", excluir: /^Conflict/ }, // governadoria → distrito
+  MY: { iso3: "mys", pasta: "my", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // estado → distrito
+  MV: { iso3: "mdv", pasta: "mv", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // atol → ilha
+  MN: { iso3: "mng", pasta: "mn", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // província (aimag) → sum
+  MM: { iso3: "mmr", pasta: "mm", nivelMunicipio: 3, comCondados: true, idioma: "EN" }, // estado ou região → distrito → township
+  NP: { iso3: "npl", pasta: "np", nivelMunicipio: 3, comCondados: true, idioma: "EN" }, // província → distrito → município (palika)
+  OM: { iso3: "omn", pasta: "om", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // governadoria → wilayat
+  PS: { iso3: "pse", pasta: "ps", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // Cisjordânia e Gaza → governadoria
+  PK: { iso3: "pak", pasta: "pk", nivelMunicipio: 3, comCondados: true, idioma: "EN" }, // província → distrito → tehsil
+  KG: { iso3: "kgz", pasta: "kg", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // região → distrito
+  SY: { iso3: "syr", pasta: "sy", nivelMunicipio: 3, comCondados: true, idioma: "EN" }, // governadoria → distrito → subdistrito
+  LK: { iso3: "lka", pasta: "lk", nivelMunicipio: 3, comCondados: true, idioma: "EN" }, // província → distrito → divisão
+  TH: { iso3: "tha", pasta: "th", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // província → distrito (amphoe)
+  TL: { iso3: "tls", pasta: "tl", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // município → posto administrativo
+  TR: { iso3: "tur", pasta: "tr", nivelMunicipio: 2, comCondados: false, idioma: "TR", titulo: "tr" }, // província → distrito
+  UZ: { iso3: "uzb", pasta: "uz", nivelMunicipio: 2, comCondados: false, idioma: "EN" }, // região → distrito
+  // Vietnã (base de 2023, antes da fusão de 2025 em 34 províncias): província → distrito
+  VN: {
+    iso3: "vnm", pasta: "vn", nivelMunicipio: 2, comCondados: false, idioma: "VI",
+    limpar: /^(Tỉnh|Thành phố|TP\.|Huyện|Quận|Thị xã) /,
+  },
 };
 
-const [pais, origem] = process.argv.slice(2);
+const [pais, origem, mapaIso] = process.argv.slice(2);
 const cfg = PAISES[pais];
 if (!cfg) throw new Error(`País sem configuração: ${pais}`);
 
+// Sem tabela ISO na configuração: o código vem do 1º nível do geoBoundaries (campo shapeISO). Uma grade de
+// pontos dentro do estado vota em qual área do geoBoundaries ele está (um ponto só erra nos estados recortados).
+// Se não achar, fica o código nacional com o prefixo do país.
+const areasIso = (mapaIso ? lerJson(mapaIso).features : [])
+  .map((f) => ({ ...f, properties: { shapeISO: (f.properties.shapeISO ?? "").replace("_", "-") } })) // "AF_KAN" → "AF-KAN"
+  .filter((f) => /^[A-Z]{2}-[A-Z0-9]+$/.test(f.properties.shapeISO));
+const isoUsados = new Set();
+function isoDoMapa(estado, num) {
+  const vertices = (estado.geometry.type === "Polygon" ? [estado.geometry.coordinates] : estado.geometry.coordinates).flatMap((p) => p[0]);
+  let [x0, x1, y0, y1] = [Infinity, -Infinity, Infinity, -Infinity];
+  for (const [x, y] of vertices) [x0, x1, y0, y1] = [Math.min(x0, x), Math.max(x1, x), Math.min(y0, y), Math.max(y1, y)];
+  const votos = new Map();
+  for (let i = 0.5; i < 12; i++) for (let j = 0.5; j < 12; j++) {
+    const ponto = [x0 + ((x1 - x0) * i) / 12, y0 + ((y1 - y0) * j) / 12];
+    if (!pontoDentro(ponto, estado.geometry)) continue;
+    const iso = areaDoPonto(ponto, areasIso)?.properties.shapeISO;
+    if (iso) votos.set(iso, (votos.get(iso) ?? 0) + 1);
+  }
+  const iso = [...votos].sort((a, b) => b[1] - a[1])[0]?.[0]
+    ?? areaDaForma(estado.geometry, areasIso, [pontoInterno(estado.geometry)])?.properties.shapeISO;
+  if (!iso || isoUsados.has(iso)) return `${pais}-${num}`;
+  isoUsados.add(iso);
+  return iso;
+}
+
 const ler = (nivel) => lerJson(`${origem}/${cfg.iso3}_adm${nivel}.geojson`).features;
-const codigo = (f, nivel) => f.properties[`ADM${nivel}_PCODE`].slice(2); // sem o prefixo do país
-const nome = (f, nivel) => f.properties[`ADM${nivel}_${cfg.idioma ?? "ES"}`];
+const codigo = (f, nivel) => f.properties[`ADM${nivel}_PCODE`].replace(/^[A-Z]+/, ""); // sem o prefixo do país (PE, KAZ...)
+// Nomes todos em maiúsculas (Turquia): "KASTAMONU" → "Kastamonu", com as regras de maiúsculas da língua
+const emTitulo = (t) => t.toLocaleLowerCase(cfg.titulo).replace(/(^|[\s(-])(\p{L})/gu, (_, a, l) => a + l.toLocaleUpperCase(cfg.titulo));
+const nome = (f, nivel) => {
+  const n = f.properties[`ADM${nivel}_${cfg.idioma ?? "ES"}`];
+  return cfg.titulo ? emTitulo(n) : n;
+};
 
 const nivelEstado = cfg.nivelEstado ?? 1;
 const nivelCondado = cfg.nivelCondado ?? 2;
-const limpo = (texto) => (cfg.prefixo ? texto.replace(cfg.prefixo, "") : texto);
+const limpo = (texto) => (cfg.limpar ? texto.replace(cfg.limpar, "") : texto);
 const fora = (f, nivel) => cfg.excluir?.test(f.properties[`ADM${nivel}_PCODE`]);
 const pcodeEstado = (f) => f.properties[`ADM${nivelEstado}_PCODE`];
 
-const estados = ler(nivelEstado);
+const estados = ler(nivelEstado).filter((e) => !fora(e, nivelEstado));
 const condados = cfg.comCondados ? ler(nivelCondado).filter((c) => !fora(c, nivelCondado)) : [];
 const municipios = ler(cfg.nivelMunicipio).filter((m) => !fora(m, cfg.nivelMunicipio));
 
@@ -172,7 +248,9 @@ for (const e of estados) {
   const num = codigo(e, nivelEstado);
   const nomeBase = limpo(nome(e, nivelEstado));
   // O código ISO vem pelo código nacional ou, onde a numeração não segue a ISO, pelo nome
-  const [iso, nomeCorrigido] = cfg.isoPorNome ? (cfg.isoPorNome[normalizar(nomeBase)] ?? []) : [cfg.iso[num], cfg.nomes?.[num]];
+  const [iso, nomeCorrigido] = cfg.isoPorNome ? (cfg.isoPorNome[normalizar(nomeBase)] ?? [])
+    : cfg.iso ? [cfg.iso[num], cfg.nomes?.[num]]
+    : [isoDoMapa(e, num), cfg.nomes?.[num]];
   if (!iso) throw new Error(`Sem código ISO para ${nomeBase} (${num})`);
   const doEstado = municipios.filter((m) => pcodeEstado(m) === pcodeEstado(e));
 
