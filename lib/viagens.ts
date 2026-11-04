@@ -127,7 +127,7 @@ export async function apagarViagem(id: string): Promise<void> {
 // Índice dividido (gerado por scripts/gerar-indice-lugares.mjs): os estados e condados num arquivo só,
 // e os municípios em pedaços pelas 2 primeiras letras de cada palavra do nome
 type Base = Record<string, { estados: [string, string][]; condados?: Record<string, [string, string][]> }>;
-type Pedaco = Record<string, Record<string, ([string, string] | [string, string, string])[]>>;
+type Pedaco = Record<string, Record<string, ([string, string] | [string, string, string | null] | [string, string, string | null, string[]])[]>>;
 
 export type Lugar = {
   tipo: "país" | "estado" | "município";
@@ -143,6 +143,7 @@ export type Lugar = {
   rotulo: string; // o nome do nível naquele país: "município", "comune", "cidade", "região"...
   onde: string; // "São Paulo, Brasil" (vazio para país)
   chave: string; // nome sem acento, em minúsculas, para comparar
+  outrasChaves?: string[]; // nomes conhecidos (Munique para München), do mesmo jeito
 };
 
 const PAISES = paisesMundo as { codigo: string; nome: string }[];
@@ -193,7 +194,7 @@ function carregarPedaco(chave: string): Promise<Lugar[]> {
           for (const [nivel1, municipios] of Object.entries(porEstado)) {
             const nivel1Nome = estados.get(nivel1) ?? nivel1;
             const condados = new Map(indice[pais].condados?.[nivel1] ?? []);
-            for (const [municipio, municipioNome, condado] of municipios) {
+            for (const [municipio, municipioNome, condado, outros] of municipios) {
               lugares.push({
                 tipo: "município", pais, paisNome, nivel1, nivel1Nome,
                 condado: condado ?? null,
@@ -204,6 +205,7 @@ function carregarPedaco(chave: string): Promise<Lugar[]> {
                 rotulo: nomes.municipio[0],
                 onde: `${nivel1Nome}, ${paisNome}`,
                 chave: semAcento(municipioNome),
+                ...(outros ? { outrasChaves: outros.map(semAcento) } : {}),
               });
             }
           }
@@ -227,10 +229,14 @@ export function buscarLugares(todos: Lugar[], texto: string, limite = 30): Lugar
   const busca = semAcento(texto);
   if (busca.length < 2) return [];
   const peso = { país: 0, estado: 1, município: 2 };
+  // Vale o melhor entre o nome oficial e os nomes conhecidos ("buenos aires" acha a Ciudad Autónoma como nome exato)
+  const nota = (c: string) => (c === busca ? 0 : c.startsWith(busca) ? 1 : c.includes(busca) ? 2 : 9);
   return todos
-    .filter((l) => l.chave.includes(busca))
-    .map((l) => ({ l, nota: (l.chave === busca ? 0 : l.chave.startsWith(busca) ? 1 : 2) * 10 + peso[l.tipo] }))
-    .sort((a, b) => a.nota - b.nota || a.l.nome.localeCompare(b.l.nome, "pt-BR"))
+    .map((l) => ({ l, melhor: Math.min(nota(l.chave), ...(l.outrasChaves ?? []).map(nota)) }))
+    .filter(({ melhor }) => melhor < 9)
+    .map(({ l, melhor }) => ({ l, nota: melhor * 10 + peso[l.tipo] }))
+    // Empate: as cidades conhecidas (com outros nomes na lista) vêm antes das homônimas pequenas
+    .sort((a, b) => a.nota - b.nota || Number(Boolean(b.l.outrasChaves)) - Number(Boolean(a.l.outrasChaves)) || a.l.nome.localeCompare(b.l.nome, "pt-BR"))
     .slice(0, limite)
     .map(({ l }) => l);
 }

@@ -6,7 +6,8 @@
 //
 // Formato (compacto):
 //   base.json   { "BR": { "estados": [[codigo, nome], ...], "condados": { "<estado>": [[codigo, nome], ...] } } }
-//   m-<xx>.json { "BR": { "<estado>": [[codigo, nome, condado?], ...] } }
+//   m-<xx>.json { "BR": { "<estado>": [[codigo, nome, condado?, outrosNomes?], ...] } }
+//   Os outros nomes (Munique para München) vêm de scripts/apelidos-lugares.json e também entram na busca.
 //   Fora do a-z e 0-9 (grego, cirílico, kanji...), o nome do arquivo leva os códigos hexadecimais das letras:
 //   "京都" → m-u4eac-90fd.json (mesma regra em lib/viagens.ts)
 //
@@ -22,6 +23,13 @@ const palavras = (nome) =>
   nome.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((p) => p.length >= 2);
 
 const arquivo = (chave) => (/^[a-z0-9]+$/.test(chave) ? `m-${chave}` : `m-u${[...chave].map((l) => l.codePointAt(0).toString(16)).join("-")}`);
+
+// Nomes conhecidos: "país|estado|nome oficial" → outros nomes (estado vazio vale para qualquer estado do país)
+const apelidos = new Map();
+for (const [pais, estado, nome, outros] of JSON.parse(readFileSync("scripts/apelidos-lugares.json", "utf8")).lugares) {
+  apelidos.set(`${pais}|${estado ?? ""}|${nome}`, outros);
+}
+const usados = new Set();
 
 const base = {};
 const pedacos = new Map(); // "sa" → { BR: { "BR-SP": [...] } }
@@ -39,8 +47,11 @@ for (const [pais, pasta] of Object.entries(PASTAS)) {
       item.condados[e.codigo] = ler(condados).map((c) => [c.codigo, c.nome]);
     }
     for (const m of ler(`${dir}/municipios-${sufixo}.json`)) {
-      const linha = m.condado ? [m.codigo, m.nome, m.condado] : [m.codigo, m.nome];
-      for (const chave of new Set(palavras(m.nome).map((p) => p.slice(0, 2)))) {
+      const chaveApelido = [`${pais}|${e.codigo}|${m.nome}`, `${pais}||${m.nome}`].find((c) => apelidos.has(c));
+      const outros = chaveApelido ? apelidos.get(chaveApelido) : null;
+      if (chaveApelido) usados.add(chaveApelido);
+      const linha = outros ? [m.codigo, m.nome, m.condado ?? null, outros] : m.condado ? [m.codigo, m.nome, m.condado] : [m.codigo, m.nome];
+      for (const chave of new Set([m.nome, ...(outros ?? [])].flatMap(palavras).map((p) => p.slice(0, 2)))) {
         if (!pedacos.has(chave)) pedacos.set(chave, {});
         const porPais = pedacos.get(chave);
         ((porPais[pais] ??= {})[e.codigo] ??= []).push(linha);
@@ -56,4 +67,6 @@ rmSync("public/geo/lugares.json", { force: true });
 mkdirSync("public/geo/lugares", { recursive: true });
 writeFileSync("public/geo/lugares/base.json", JSON.stringify(base));
 for (const [chave, porPais] of pedacos) writeFileSync(`public/geo/lugares/${arquivo(chave)}.json`, JSON.stringify(porPais));
+const sobrando = [...apelidos.keys()].filter((c) => !usados.has(c));
+if (sobrando.length) console.log(`Nomes conhecidos sem município no mapa: ${sobrando.join("; ")}`);
 console.log(`${Object.keys(base).length} países, ${total.toLocaleString("pt-BR")} municípios em ${pedacos.size} pedaços de public/geo/lugares/`);
