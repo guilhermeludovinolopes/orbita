@@ -5,6 +5,8 @@ import { DETALHE_PAISES } from "@/lib/detalhe-paises";
 import { buscarLugares, carregarLugares, nomeDoPais, type Lugar, type NovaViagem, type Viagem } from "@/lib/viagens";
 import estilos from "./MinhasViagens.module.css";
 
+const MODOS: [Lugar["tipo"], string][] = [["município", "Cidade"], ["estado", "Estado"], ["país", "País"]];
+
 const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 
 type Props = {
@@ -44,6 +46,8 @@ const descrever = (l: Lugar) => (l.onde ? `${l.rotulo} · ${l.onde}` : l.rotulo)
 export default function FormularioViagem({ viagem, anoInicial, primeiroAno, aoSalvar, aoCancelar }: Props) {
   const [lugar, setLugar] = useState<Lugar | null>(viagem ? lugarDa(viagem) : null);
   const [texto, setTexto] = useState("");
+  // Buscar por cidade (o normal: o estado e o país vêm junto), ou só por estado ou país, para quem quer só pintar o mapa
+  const [modo, setModo] = useState<Lugar["tipo"]>(viagem ? lugarDa(viagem).tipo : "município");
   const [todos, setTodos] = useState<Lugar[] | null>(null);
   const [ano, setAno] = useState<number | null>(viagem ? viagem.ano : anoInicial);
   const [mes, setMes] = useState<number | null>(viagem?.mes ?? null);
@@ -56,7 +60,7 @@ export default function FormularioViagem({ viagem, anoInicial, primeiroAno, aoSa
   // A lista de lugares vem aos pedaços: muda conforme a primeira palavra digitada
   useEffect(() => {
     let atual = true;
-    carregarLugares(texto).then(
+    carregarLugares(modo === "município" ? texto : "").then(
       (lista) => atual && setTodos(lista),
       (e) => {
         console.error("Não consegui carregar a lista de lugares", e);
@@ -66,7 +70,7 @@ export default function FormularioViagem({ viagem, anoInicial, primeiroAno, aoSa
     return () => {
       atual = false;
     };
-  }, [texto]);
+  }, [texto, modo]);
 
   useEffect(() => {
     const tecla = (e: KeyboardEvent) => e.key === "Escape" && aoCancelar();
@@ -74,7 +78,10 @@ export default function FormularioViagem({ viagem, anoInicial, primeiroAno, aoSa
     return () => window.removeEventListener("keydown", tecla);
   }, [aoCancelar]);
 
-  const resultados = useMemo(() => (todos ? buscarLugares(todos, texto) : []), [todos, texto]);
+  const resultados = useMemo(() => {
+    if (!todos) return [];
+    return buscarLugares(todos.filter((l) => l.tipo === modo), texto);
+  }, [todos, texto, modo]);
 
   const anoAtual = new Date().getFullYear();
   const anos: number[] = [];
@@ -128,10 +135,17 @@ export default function FormularioViagem({ viagem, anoInicial, primeiroAno, aoSa
             </div>
           ) : (
             <>
+              <div className={estilos.modos} role="radiogroup" aria-label="Buscar por">
+                {MODOS.map(([tipo, rotulo]) => (
+                  <button key={tipo} type="button" role="radio" aria-checked={modo === tipo} className={modo === tipo ? estilos.modoAtivo : estilos.modo} onClick={() => setModo(tipo)}>
+                    {rotulo}
+                  </button>
+                ))}
+              </div>
               <input
                 type="search"
                 autoFocus
-                placeholder={todos ? "Cidade, estado ou país…" : "Carregando a lista de lugares…"}
+                placeholder={!todos ? "Carregando a lista de lugares…" : `${MODOS.find(([t]) => t === modo)![1]}…`}
                 value={texto}
                 onChange={(e) => setTexto(e.target.value)}
               />
@@ -149,7 +163,12 @@ export default function FormularioViagem({ viagem, anoInicial, primeiroAno, aoSa
                   ))}
                 </ul>
               )}
-              {todos && texto.trim().length >= 2 && resultados.length === 0 && <small className={estilos.ajuda}>Nenhum lugar com esse nome.</small>}
+              {todos && texto.trim().length >= 2 && resultados.length === 0 && <small className={estilos.ajuda}>Nada com esse nome.</small>}
+              <small className={estilos.ajuda}>
+                {modo === "município"
+                  ? "O estado e o país entram junto com a cidade."
+                  : `O ${modo} fica pintado no mapa, sem nenhuma cidade marcada.`}
+              </small>
             </>
           )}
         </div>

@@ -428,6 +428,39 @@
   min-width: 0;
 }
 
+/* Buscar por: Cidade | Estado | País */
+.modos {
+  display: flex;
+  gap: 6px;
+}
+
+.modo,
+.modoAtivo {
+  padding: 4px 12px;
+  border: 1px solid rgba(245, 240, 232, 0.18);
+  border-radius: 999px;
+  background: none;
+  color: var(--papel);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.modo {
+  opacity: 0.7;
+}
+
+.modo:hover {
+  opacity: 1;
+}
+
+.modoAtivo {
+  background: var(--papel);
+  border-color: var(--papel);
+  color: var(--tinta);
+  font-weight: 600;
+}
+
 .campo > span {
   font-family: var(--fonte-mono), monospace;
   font-size: 11px;
