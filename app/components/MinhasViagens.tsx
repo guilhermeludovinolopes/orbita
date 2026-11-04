@@ -306,8 +306,15 @@ export default function MinhasViagens({ aoFechar, aoMudar }: Props) {
   );
 }
 
-// Ranking dos países: em quantos anos diferentes ele foi a cada um (o país onde mora conta todos os anos de vida)
+// Ranking dos países, com filtro: por anos diferentes em que ele foi (o país onde mora conta todos os anos de vida)
+// ou por número de visitas registradas (cada cidade, estado ou local conta uma)
+type OrdemRanking = "anos" | "visitas";
+
+const anosTexto = (n: number) => `${n} ${n === 1 ? "ano" : "anos diferentes"}`;
+const visitasTexto = (n: number) => `${n} ${n === 1 ? "visita" : "visitas"}`;
+
 function Ranking({ viagens }: { viagens: Viagem[] }) {
+  const [ordem, setOrdem] = useState<OrdemRanking>("anos");
   const anosDeVida = new Date().getFullYear() - PRIMEIRO_ANO;
   const porPais = new Map<string, { anos: Set<number>; visitas: number }>();
   for (const v of viagens) {
@@ -318,38 +325,47 @@ function Ranking({ viagens }: { viagens: Viagem[] }) {
   }
   const linhas = [...porPais].map(([pais, { anos, visitas }]) => {
     const lista = [...anos].sort((a, b) => a - b);
-    const total = pais === PAIS_DE_CASA ? anosDeVida : lista.length;
-    return { pais, nome: nomeDoPais(pais), total, visitas, primeiro: lista[0], ultimo: lista.at(-1), casa: pais === PAIS_DE_CASA };
+    const casa = pais === PAIS_DE_CASA;
+    return { pais, nome: nomeDoPais(pais), anos: casa ? anosDeVida : lista.length, visitas, primeiro: lista[0], ultimo: lista.at(-1), casa };
   });
-  linhas.sort((a, b) => b.total - a.total || b.visitas - a.visitas || a.nome.localeCompare(b.nome, "pt-BR"));
+  const valor = (l: (typeof linhas)[number]) => (ordem === "anos" ? l.anos : l.visitas);
+  const outro = (l: (typeof linhas)[number]) => (ordem === "anos" ? l.visitas : l.anos);
+  linhas.sort((a, b) => valor(b) - valor(a) || outro(b) - outro(a) || a.nome.localeCompare(b.nome, "pt-BR"));
+  const maior = Math.max(1, ...linhas.map(valor)); // a barra é proporcional ao primeiro colocado
 
   if (!linhas.length) return <p className={estilos.ajuda}>Nenhuma viagem ainda.</p>;
   return (
-    <ol className={estilos.ranking}>
-      {linhas.map((l, i) => (
-        <li key={l.pais}>
-          <span className={estilos.posicao}>{i + 1}º</span>
-          <Bandeira pais={l.pais} classe={estilos.bandeiraRanking} />
-          <div className={estilos.linhaRanking}>
-            <div className={estilos.nomeRanking}>
-              <strong>{l.nome}</strong>
-              <span>
-                {l.total} {l.total === 1 ? "ano" : "anos"}
-                {l.casa ? ` · todos os seus ${anosDeVida} anos (onde você mora)` : ` de ${anosDeVida}`}
-              </span>
-            </div>
-            <div className={estilos.barra} aria-hidden="true">
-              <span style={{ width: `${Math.max(2, (l.total / anosDeVida) * 100)}%` }} />
-            </div>
-            <small>
-              {l.casa
-                ? `${l.visitas} ${l.visitas === 1 ? "visita registrada" : "visitas registradas"}`
-                : `${l.visitas} ${l.visitas === 1 ? "visita" : "visitas"}${l.primeiro ? ` · ${l.primeiro === l.ultimo ? l.primeiro : `de ${l.primeiro} a ${l.ultimo}`}` : ""}`}
-            </small>
-          </div>
-        </li>
-      ))}
-    </ol>
+    <div className={estilos.ranking}>
+      <div className={estilos.modos} role="radiogroup" aria-label="Ordenar o ranking">
+        <button role="radio" aria-checked={ordem === "anos"} className={ordem === "anos" ? estilos.modoAtivo : estilos.modo} onClick={() => setOrdem("anos")}>
+          Por anos
+        </button>
+        <button role="radio" aria-checked={ordem === "visitas"} className={ordem === "visitas" ? estilos.modoAtivo : estilos.modo} onClick={() => setOrdem("visitas")}>
+          Por visitas
+        </button>
+      </div>
+      <ol>
+        {linhas.map((l, i) => {
+          const periodo = l.casa ? "onde você mora" : l.primeiro ? (l.primeiro === l.ultimo ? `${l.primeiro}` : `de ${l.primeiro} a ${l.ultimo}`) : "";
+          return (
+            <li key={l.pais}>
+              <span className={estilos.posicao}>{i + 1}º</span>
+              <Bandeira pais={l.pais} classe={estilos.bandeiraRanking} />
+              <div className={estilos.linhaRanking}>
+                <div className={estilos.nomeRanking}>
+                  <strong>{l.nome}</strong>
+                  <span>{ordem === "anos" ? anosTexto(l.anos) : visitasTexto(l.visitas)}</span>
+                </div>
+                <div className={estilos.barra} aria-hidden="true">
+                  <span style={{ width: `${Math.max(2, (valor(l) / maior) * 100)}%` }} />
+                </div>
+                <small>{[ordem === "anos" ? visitasTexto(l.visitas) : anosTexto(l.anos), periodo].filter(Boolean).join(" · ")}</small>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }
 

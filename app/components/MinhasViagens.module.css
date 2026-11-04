@@ -585,12 +585,18 @@
   padding: 0 24px 14px;
 }
 
-/* Ranking de países: posição, bandeira, nome, anos e uma barra proporcional aos anos de vida */
+/* Ranking de países: filtro (anos | visitas), posição, bandeira, nome e uma barra proporcional ao primeiro colocado */
 .ranking {
   list-style: none;
   margin: 0 auto;
   max-width: 1120px;
   padding: 16px 24px 48px;
+}
+
+.ranking ol {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
 }
 
 .ranking li {
