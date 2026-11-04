@@ -32,6 +32,7 @@ import {
 import type { Maravilha } from "@/lib/maravilhas";
 import { DETALHE_PAISES, temCondados } from "@/lib/detalhe-paises";
 import PainelBandeiras from "./PainelBandeiras";
+import { IconePaises, IconeViagens } from "./Icones";
 import FaixaMaravilhas from "./FaixaMaravilhas";
 import ListaLugares, { type ItemLugar } from "./ListaLugares";
 import MinhasViagens from "./MinhasViagens";
@@ -192,6 +193,7 @@ export default function Globo() {
   const esconderMiniaturaRef = useRef<() => void>(() => {});
   const recarregarRef = useRef<() => Promise<void>>(async () => {});
   const [viagensAbertas, setViagensAbertas] = useState(false);
+  const [paisesAbertos, setPaisesAbertos] = useState(false);
 
   // A miniatura da Maravilha só fica no mapa enquanto ela é a selecionada
   useEffect(() => {
@@ -254,7 +256,7 @@ export default function Globo() {
 
     const atual: Nivel = {};
     // No computador, a coluna de bandeiras ocupa a direita: o enquadramento deixa espaço para ela
-    const padding = celular ? 24 : { top: 80, bottom: 80, left: 80, right: 80 + 316 };
+    const padding = celular ? 24 : { top: 80, bottom: 80, left: 80, right: 80 };
 
     // Adiciona (ou troca) uma camada de áreas: preenchimento por situação, divisas e destaque
     function mostrarCamada(camada: Camada, features: GeoJSON.Feature[]) {
@@ -786,8 +788,14 @@ export default function Globo() {
       <div ref={recipiente} className={estilos.mapa} />
 
       <div className={estilos.trilha}>
-        <button className={estilos.voltar} onClick={() => setViagensAbertas(true)}>
-          Minhas viagens
+        <button
+          className={`${estilos.icone} ${viagensAbertas ? estilos.iconeAtivo : ""}`}
+          onClick={() => setViagensAbertas(!viagensAbertas)}
+          aria-label="Minhas viagens"
+          aria-expanded={viagensAbertas}
+          title="Minhas viagens"
+        >
+          <IconeViagens />
         </button>
         {nivel.pais && (
           <nav className={estilos.niveis} aria-label="Onde você está no mapa">
@@ -805,7 +813,19 @@ export default function Globo() {
 
       {viagensAbertas && <MinhasViagens aoFechar={() => setViagensAbertas(false)} aoMudar={() => recarregarRef.current()} />}
 
+      <button
+        className={`${estilos.icone} ${estilos.iconeDireita} ${paisesAbertos ? estilos.iconeAtivo : ""}`}
+        onClick={() => setPaisesAbertos(!paisesAbertos)}
+        aria-label="Países"
+        aria-expanded={paisesAbertos}
+        title="Países"
+      >
+        <IconePaises />
+      </button>
+
       <PainelBandeiras
+        aberto={paisesAbertos}
+        aoFechar={() => setPaisesAbertos(false)}
         antesDosPaises={<FaixaMaravilhas vistas={vistas} aoEscolher={(m) => irParaMaravilhaRef.current(m)} />}
         visitados={visitados}
         aoEscolher={(codigo, nome) => irParaPaisRef.current(codigo, nome)}

@@ -1,11 +1,18 @@
 /* Painel "Minhas viagens": tela cheia, sobre Tinta, cobrindo o globo (que segue montado por trás) */
+/* Abre por cima do globo, translúcido como a coluna de países, abaixo do ícone do diário */
 .tela {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
+  position: absolute;
+  top: 76px;
+  left: 16px;
+  bottom: 16px;
+  z-index: 4;
+  width: min(640px, calc(100% - 32px));
   display: flex;
   flex-direction: column;
-  background: var(--tinta);
+  background: rgba(0, 15, 12, 0.88); /* Tinta */
+  border: 1px solid rgba(245, 240, 232, 0.12);
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .topo {
