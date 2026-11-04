@@ -1,12 +1,12 @@
 /* Painel "Minhas viagens": tela cheia, sobre Tinta, cobrindo o globo (que segue montado por trás) */
-/* Abre por cima do globo, translúcido como a coluna de países, abaixo do ícone do diário */
+/* Abre por cima do globo, translúcido como a coluna de países, ao lado da coluna de ícones (à direita) */
 .tela {
   position: absolute;
-  top: 144px;
-  left: 16px;
+  top: 16px;
+  right: 76px;
   bottom: 16px;
   z-index: 4;
-  width: min(640px, calc(100% - 32px));
+  width: min(640px, calc(100% - 92px));
   display: flex;
   flex-direction: column;
   background: rgba(0, 15, 12, 0.88); /* Tinta */
@@ -576,4 +576,86 @@
   .viagens {
     padding-left: 0;
   }
+}
+
+/* Abas do painel: Linha do tempo | Ranking de países */
+.abas {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px 14px;
+}
+
+/* Ranking de países: posição, bandeira, nome, anos e uma barra proporcional aos anos de vida */
+.ranking {
+  list-style: none;
+  margin: 0 auto;
+  max-width: 1120px;
+  padding: 16px 24px 48px;
+}
+
+.ranking li {
+  display: grid;
+  grid-template-columns: 36px 32px 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(245, 240, 232, 0.08);
+}
+
+.posicao {
+  font-family: var(--fonte-mono), monospace;
+  font-size: 15px;
+  color: var(--dourado);
+  text-align: right;
+}
+
+.bandeiraRanking {
+  width: 32px;
+  height: 24px;
+  border-radius: 3px;
+  object-fit: cover;
+}
+
+.linhaRanking {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.nomeRanking {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nomeRanking strong {
+  font-weight: 600;
+}
+
+.nomeRanking span,
+.linhaRanking small {
+  font-family: var(--fonte-mono), monospace;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.nomeRanking span {
+  color: var(--dourado);
+  opacity: 1;
+  white-space: nowrap;
+}
+
+.barra {
+  height: 4px;
+  background: rgba(245, 240, 232, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.barra span {
+  display: block;
+  height: 100%;
+  background: var(--dourado);
 }

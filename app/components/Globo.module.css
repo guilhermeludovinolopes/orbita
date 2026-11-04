@@ -19,11 +19,21 @@
 
 /* Fica dentro da coluna de bandeiras, numa linha só */
 .legenda {
+  position: absolute;
+  bottom: 16px;
+  left: 20px;
+  z-index: 1;
   list-style: none;
-  padding: 0;
+  margin: 0;
+  padding: 8px 14px;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 14px;
+  gap: 6px 16px;
+  background: rgba(0, 15, 12, 0.72); /* Tinta translúcida, como os ícones */
+  border: 1px solid rgba(245, 240, 232, 0.12);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  pointer-events: none;
   font-family: var(--fonte-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -33,7 +43,7 @@
 .legenda li {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .legenda span {
@@ -44,11 +54,11 @@
 
 .painel {
   position: absolute;
-  bottom: 24px;
-  left: 24px;
+  bottom: 64px; /* acima da legenda */
+  left: 20px;
   width: min(340px, calc(100% - 48px));
   /* Com a lista de lugares o painel cresce: rola por dentro, abaixo do botão de voltar */
-  max-height: calc(100% - 96px);
+  max-height: calc(100% - 200px); /* entre o caminho (embaixo do nome) e a legenda */
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(245, 240, 232, 0.25) transparent;
@@ -186,11 +196,15 @@
   border-color: var(--dourado);
 }
 
-.iconeDireita {
+/* Coluna de ícones no canto direito; os painéis abrem ao lado dela */
+.trilhoIcones {
   position: absolute;
   top: 16px;
   right: 16px;
   z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .trilha {

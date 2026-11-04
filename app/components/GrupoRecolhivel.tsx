@@ -7,14 +7,15 @@ type Props = {
   titulo: string;
   contador: string; // ex.: "1 de 23", sempre na mesma linha do título
   children: React.ReactNode;
+  macro?: boolean; // grupo de cima (Regiões, Atrações): título maior, com os grupos menores dentro
 };
 
 // Grupo da coluna da direita que começa fechado: uma setinha abre e fecha o conteúdo
-export default function GrupoRecolhivel({ titulo, contador, children }: Props) {
+export default function GrupoRecolhivel({ titulo, contador, children, macro = false }: Props) {
   const [aberto, setAberto] = useState(false);
   const id = useId();
   return (
-    <section className={estilos.grupo}>
+    <section className={`${estilos.grupo} ${macro ? estilos.macro : ""}`}>
       <button className={estilos.cabecalho} onClick={() => setAberto(!aberto)} aria-expanded={aberto} aria-controls={id}>
         <span className={`${estilos.seta} ${aberto ? estilos.setaAberta : ""}`} aria-hidden="true">
           ▸

@@ -54,3 +54,25 @@
 .conteudo {
   padding: 2px 0 12px;
 }
+
+/* Grupo de cima: título maior em Papel; os grupos de dentro ficam recuados */
+.macro > .cabecalho {
+  padding: 14px 2px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+.macro > .cabecalho .titulo {
+  opacity: 1;
+}
+
+.macro > .conteudo {
+  padding: 0 0 8px 18px;
+}
+
+.macro > .conteudo > .grupo:last-child {
+  border-bottom: none;
+}

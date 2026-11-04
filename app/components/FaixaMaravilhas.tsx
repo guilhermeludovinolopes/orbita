@@ -10,11 +10,12 @@ type Props = {
   aoEscolher: (maravilha: Maravilha) => void;
 };
 
-// As 7 Maravilhas do Mundo, no topo da coluna da direita (fechadas até abrir pela setinha),
-// com as que o Guilherme já viu em dourado
+// Seção "Atrações" da coluna de países: por enquanto as 7 Maravilhas do Mundo (fechadas até abrir
+// pela setinha), com as que o Guilherme já viu em dourado. Outras listas (Patrimônios da UNESCO...) entram aqui.
 export default function FaixaMaravilhas({ vistas, aoEscolher }: Props) {
   const total = MARAVILHAS.filter((m) => vistas.has(m.id)).length;
   return (
+    <GrupoRecolhivel titulo="Atrações" contador={`${total} de 7`} macro>
     <GrupoRecolhivel titulo="7 Maravilhas" contador={`${total} de 7`}>
       <ul className={estilos.lista}>
         {MARAVILHAS.map((m) => {
@@ -33,6 +34,7 @@ export default function FaixaMaravilhas({ vistas, aoEscolher }: Props) {
           );
         })}
       </ul>
+    </GrupoRecolhivel>
     </GrupoRecolhivel>
   );
 }

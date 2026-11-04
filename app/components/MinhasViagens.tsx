@@ -18,6 +18,7 @@ import estilos from "./MinhasViagens.module.css";
 
 // A linha do tempo começa no ano em que o Guilherme nasceu
 const PRIMEIRO_ANO = 1999;
+const PAIS_DE_CASA = "BR"; // onde o Guilherme mora: no ranking conta todos os anos de vida
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 const BANDEIRAS_NO_TITULO = 14; // quantas bandeiras cabem ao lado do ano fechado
 
@@ -54,6 +55,7 @@ export default function MinhasViagens({ aoFechar, aoMudar }: Props) {
   const [pedindoEntrada, setPedindoEntrada] = useState(false);
   const [abertos, setAbertos] = useState<Set<string>>(new Set());
   const [filtro, setFiltro] = useState("");
+  const [aba, setAba] = useState<"linha" | "ranking">("linha");
 
   const podeEditar = comChave;
   const editavel = modoEdicao && podeEditar;
@@ -177,6 +179,15 @@ export default function MinhasViagens({ aoFechar, aoMudar }: Props) {
           </div>
         </div>
 
+        <div className={`${estilos.modos} ${estilos.abas}`} role="tablist" aria-label="Ver as viagens">
+          <button role="tab" aria-selected={aba === "linha"} className={aba === "linha" ? estilos.modoAtivo : estilos.modo} onClick={() => setAba("linha")}>
+            Linha do tempo
+          </button>
+          <button role="tab" aria-selected={aba === "ranking"} className={aba === "ranking" ? estilos.modoAtivo : estilos.modo} onClick={() => setAba("ranking")}>
+            Ranking de países
+          </button>
+        </div>
+
         {pedindoEntrada && !podeEditar && <Entrada aoEntrar={() => setComChave(true)} aoCancelar={() => setPedindoEntrada(false)} />}
 
         {editavel && (
@@ -190,6 +201,9 @@ export default function MinhasViagens({ aoFechar, aoMudar }: Props) {
       </header>
 
       <div className={estilos.conteudo}>
+        {aba === "ranking" ? (
+          <Ranking viagens={viagens ?? []} />
+        ) : (
         <div className={estilos.coluna}>
           {erro && <p className={estilos.aviso}>{erro}</p>}
           {!busca && comViagem.length > 0 && (
@@ -264,6 +278,7 @@ export default function MinhasViagens({ aoFechar, aoMudar }: Props) {
             );
           })}
         </div>
+        )}
       </div>
 
       {podeEditar && (
@@ -288,6 +303,53 @@ export default function MinhasViagens({ aoFechar, aoMudar }: Props) {
           viagem={editando.viagem} anoInicial={editando.ano} primeiroAno={PRIMEIRO_ANO} aoSalvar={salvar} aoCancelar={() => setEditando(null)} />
       )}
     </div>
+  );
+}
+
+// Ranking dos países: em quantos anos diferentes ele foi a cada um (o país onde mora conta todos os anos de vida)
+function Ranking({ viagens }: { viagens: Viagem[] }) {
+  const anosDeVida = new Date().getFullYear() - PRIMEIRO_ANO;
+  const porPais = new Map<string, { anos: Set<number>; visitas: number }>();
+  for (const v of viagens) {
+    const item = porPais.get(v.pais) ?? { anos: new Set<number>(), visitas: 0 };
+    if (v.ano) item.anos.add(v.ano);
+    item.visitas++;
+    porPais.set(v.pais, item);
+  }
+  const linhas = [...porPais].map(([pais, { anos, visitas }]) => {
+    const lista = [...anos].sort((a, b) => a - b);
+    const total = pais === PAIS_DE_CASA ? anosDeVida : lista.length;
+    return { pais, nome: nomeDoPais(pais), total, visitas, primeiro: lista[0], ultimo: lista.at(-1), casa: pais === PAIS_DE_CASA };
+  });
+  linhas.sort((a, b) => b.total - a.total || b.visitas - a.visitas || a.nome.localeCompare(b.nome, "pt-BR"));
+
+  if (!linhas.length) return <p className={estilos.ajuda}>Nenhuma viagem ainda.</p>;
+  return (
+    <ol className={estilos.ranking}>
+      {linhas.map((l, i) => (
+        <li key={l.pais}>
+          <span className={estilos.posicao}>{i + 1}º</span>
+          <Bandeira pais={l.pais} classe={estilos.bandeiraRanking} />
+          <div className={estilos.linhaRanking}>
+            <div className={estilos.nomeRanking}>
+              <strong>{l.nome}</strong>
+              <span>
+                {l.total} {l.total === 1 ? "ano" : "anos"}
+                {l.casa ? ` · todos os seus ${anosDeVida} anos (onde você mora)` : ` de ${anosDeVida}`}
+              </span>
+            </div>
+            <div className={estilos.barra} aria-hidden="true">
+              <span style={{ width: `${Math.max(2, (l.total / anosDeVida) * 100)}%` }} />
+            </div>
+            <small>
+              {l.casa
+                ? `${l.visitas} ${l.visitas === 1 ? "visita registrada" : "visitas registradas"}`
+                : `${l.visitas} ${l.visitas === 1 ? "visita" : "visitas"}${l.primeiro ? ` · ${l.primeiro === l.ultimo ? l.primeiro : `de ${l.primeiro} a ${l.ultimo}`}` : ""}`}
+            </small>
+          </div>
+        </li>
+      ))}
+    </ol>
   );
 }
 
