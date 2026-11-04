@@ -29,7 +29,7 @@ App web pessoal do Guilherme Lopes (linha **GL Pessoal**, sem fins profissionais
 - Dourado: estado completo quando todos os municípios dele foram visitados; país completo quando todos os municípios do país foram. O município visitado é verde; quando o estado (ou o condado) dele está completo, os municípios também ficam dourados, porque aquele espaço está 100% visitado (ex.: a Cidade Autônoma de Buenos Aires, que tem um município só).
 - Oceano realista: Blue Marble da NASA (domínio público) só com o mar, gerado por `scripts/gerar-oceano.mjs` em `public/geo/oceano.jpg`. Marinho fica por baixo, como reserva.
 - Relevo sombreado da Natural Earth por cima das cores dos países (`scripts/gerar-relevo.mjs`); lagos e rios na cor do mar raso (`scripts/gerar-aguas.mjs`). Sem nuvens e sem dia/noite (decisão do Guilherme).
-- Espaço ao redor do globo: Tinta com estrelas. Atmosfera bem sutil, que some ao aproximar (exceção consciente à regra de evitar gradientes, em avaliação).
+- Espaço ao redor do globo: imagem do espaço escolhida pelo Guilherme (`public/fundo/espaco.webp`, sol, planetas e galáxias), em tela cheia atrás do globo, sobre fundo Tinta. Para trocar, basta substituir o arquivo. Atmosfera bem sutil, que some ao aproximar (exceção consciente à regra de evitar gradientes, em avaliação).
 - Não visitado: terra em tom pastel (`#D8CFBF`, em avaliação). Visitado: verde. Completo (visitou absolutamente tudo dentro): dourado.
 - Divisas em Marrom Café, visíveis sobre todas as cores e o mar. País sob o mouse: contorno em Bordô, mais grosso.
 - Foco ao entrar num país ou estado: o resto ganha película de Tinta a 60% (o mar escurece no nível do país) e a área em foco ganha contorno em Papel.

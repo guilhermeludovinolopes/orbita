@@ -111,24 +111,6 @@ const CANTOS_MERCATOR: [[number, number], [number, number], [number, number], [n
   [-180, -LAT_MAX_MERCATOR],
 ];
 
-// Céu estrelado fixo: pontos com posição e brilho sorteados uma vez por tela
-function desenharEstrelas(tela: HTMLCanvasElement) {
-  const escala = window.devicePixelRatio || 1;
-  tela.width = tela.clientWidth * escala;
-  tela.height = tela.clientHeight * escala;
-  const ctx = tela.getContext("2d");
-  if (!ctx) return;
-  const quantidade = Math.round((tela.clientWidth * tela.clientHeight) / 2500);
-  for (let i = 0; i < quantidade; i++) {
-    const raio = (Math.random() < 0.9 ? 0.5 : 0.9) * escala;
-    ctx.globalAlpha = 0.25 + Math.random() * 0.6;
-    ctx.fillStyle = "#F5F0E8"; // Papel
-    ctx.beginPath();
-    ctx.arc(Math.random() * tela.width, Math.random() * tela.height, raio, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
 const PREENCHIMENTO: ExpressionSpecification = [
   "match",
   ["get", "situacao"],
@@ -199,7 +181,6 @@ const buscarGeo = (url: string) => {
 
 export default function Globo() {
   const recipiente = useRef<HTMLDivElement>(null);
-  const ceu = useRef<HTMLCanvasElement>(null);
   const [selecionado, setSelecionado] = useState<Selecionado | null>(null);
   const [nivel, setNivel] = useState<Nivel>({});
   const voltarRef = useRef<() => void>(() => {});
@@ -216,15 +197,6 @@ export default function Globo() {
   useEffect(() => {
     if (selecionado?.tipo !== TIPO_MARAVILHA) esconderMiniaturaRef.current();
   }, [selecionado]);
-
-  useEffect(() => {
-    const tela = ceu.current;
-    if (!tela) return;
-    desenharEstrelas(tela);
-    const redesenhar = () => desenharEstrelas(tela);
-    window.addEventListener("resize", redesenhar);
-    return () => window.removeEventListener("resize", redesenhar);
-  }, []);
 
   useEffect(() => {
     if (!recipiente.current) return;
@@ -810,7 +782,7 @@ export default function Globo() {
 
   return (
     <div className={estilos.area}>
-      <canvas ref={ceu} className={estilos.ceu} aria-hidden="true" />
+      <div className={estilos.ceu} aria-hidden="true" /> {/* imagem do espaço, atrás do globo */}
       <div ref={recipiente} className={estilos.mapa} />
 
       <div className={estilos.trilha}>
