@@ -348,7 +348,7 @@ function Ranking({ viagens }: { viagens: Viagem[] }) {
         {linhas.map((l, i) => {
           const periodo = l.casa ? "onde você mora" : l.primeiro ? (l.primeiro === l.ultimo ? `${l.primeiro}` : `de ${l.primeiro} a ${l.ultimo}`) : "";
           return (
-            <li key={l.pais}>
+            <li key={l.pais} className={[estilos.ouro, estilos.prata, estilos.bronze][i] ?? estilos.demais}>
               <span className={estilos.posicao}>{i + 1}º</span>
               <Bandeira pais={l.pais} classe={estilos.bandeiraRanking} />
               <div className={estilos.linhaRanking}>
