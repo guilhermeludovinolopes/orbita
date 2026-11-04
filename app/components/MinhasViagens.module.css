@@ -585,12 +585,18 @@
   padding: 0 24px 14px;
 }
 
-/* Ranking de países: posição, bandeira, nome, anos e uma barra proporcional aos anos de vida */
+/* Ranking de países: filtro (anos | visitas), posição, bandeira, nome e uma barra proporcional ao primeiro colocado */
 .ranking {
   list-style: none;
   margin: 0 auto;
   max-width: 1120px;
   padding: 16px 24px 48px;
+}
+
+.ranking ol {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
 }
 
 .ranking li {
@@ -605,7 +611,7 @@
 .posicao {
   font-family: var(--fonte-mono), monospace;
   font-size: 15px;
-  color: var(--dourado);
+  color: var(--cor-ranking);
   text-align: right;
 }
 
@@ -642,7 +648,7 @@
 }
 
 .nomeRanking span {
-  color: var(--dourado);
+  color: var(--cor-ranking);
   opacity: 1;
   white-space: nowrap;
 }
@@ -657,5 +663,11 @@
 .barra span {
   display: block;
   height: 100%;
-  background: var(--dourado);
+  background: var(--cor-ranking);
 }
+
+/* Pódio: 1º ouro, 2º prata, 3º bronze; do 4º em diante, verde (um verde mais claro que o do mapa, para ler sobre a Tinta) */
+.ouro { --cor-ranking: var(--dourado); }
+.prata { --cor-ranking: #C4C9CE; }
+.bronze { --cor-ranking: #B9814F; }
+.demais { --cor-ranking: #5A9E7B; }
