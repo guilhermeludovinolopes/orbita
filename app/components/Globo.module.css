@@ -12,6 +12,11 @@
   height: 100%;
 }
 
+/* Espaço em volta do globo: imagem escolhida pelo Guilherme (public/fundo/espaco.webp) */
+.ceu {
+  background: var(--tinta) url("/fundo/espaco.webp") center / cover no-repeat;
+}
+
 /* Fica dentro da coluna de bandeiras, numa linha só */
 .legenda {
   list-style: none;
