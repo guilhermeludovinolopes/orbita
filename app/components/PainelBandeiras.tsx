@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import paisesMundo from "@/lib/paises-mundo.json";
 import GrupoRecolhivel from "./GrupoRecolhivel";
 import estilos from "./PainelBandeiras.module.css";
@@ -14,26 +13,27 @@ type Props = {
   aoEscolher: (codigo: string, nome: string) => void;
   legenda: React.ReactNode;
   antesDosPaises?: React.ReactNode; // seção no topo da lista (as 7 Maravilhas)
+  aberto: boolean; // abre pelo ícone de bandeira no canto direito do globo
+  aoFechar: () => void;
 };
 
-// Coluna da direita: todas as bandeiras do mundo, com as dos países visitados em destaque
-export default function PainelBandeiras({ visitados, aoEscolher, legenda, antesDosPaises }: Props) {
-  const [aberto, setAberto] = useState(false); // só usado no celular, onde a coluna vira uma gaveta
+// Coluna da direita, por cima do globo: todas as bandeiras do mundo, com as dos países visitados em destaque
+export default function PainelBandeiras({ visitados, aoEscolher, legenda, antesDosPaises, aberto, aoFechar }: Props) {
   const paises = paisesMundo as Pais[];
   const totalVisitados = paises.filter((p) => visitados.has(p.codigo)).length;
 
+  if (!aberto) return null;
   return (
     <>
-      <button className={estilos.alternar} onClick={() => setAberto(!aberto)} aria-expanded={aberto}>
-        {aberto ? "Fechar" : `Países · ${totalVisitados}`}
-      </button>
-
-      <aside className={`${estilos.coluna} ${aberto ? estilos.aberta : ""}`} aria-label="Bandeiras dos países">
+      <aside className={estilos.coluna} aria-label="Bandeiras dos países">
         <header className={estilos.topo}>
           <h2 className={estilos.titulo}>Países</h2>
           <p className={estilos.contador}>
             {totalVisitados} de {paises.length}
           </p>
+          <button className={estilos.fechar} onClick={aoFechar} aria-label="Fechar países">
+            ×
+          </button>
         </header>
         <div className={estilos.legenda}>{legenda}</div>
 
@@ -54,7 +54,6 @@ export default function PainelBandeiras({ visitados, aoEscolher, legenda, antesD
                         className={`${estilos.bandeira} ${visitados.has(p.codigo) ? estilos.visitado : ""}`}
                         onClick={() => {
                           aoEscolher(p.codigo, p.nome);
-                          setAberto(false);
                         }}
                         title={p.nome}
                         aria-label={`${p.nome}${visitados.has(p.codigo) ? " (visitado)" : ""}`}

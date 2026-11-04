@@ -160,6 +160,39 @@
   opacity: 0.75;
 }
 
+/* Ícones redondos dos cantos: Minhas viagens (esquerda) e Países (direita) */
+.icone {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  padding: 0;
+  background: rgba(0, 15, 12, 0.72); /* Tinta translúcida, deixa o espaço aparecer */
+  color: var(--papel);
+  border: 1px solid rgba(245, 240, 232, 0.25);
+  border-radius: 50%;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.icone:hover {
+  border-color: var(--papel);
+}
+
+.iconeAtivo {
+  color: var(--dourado);
+  border-color: var(--dourado);
+}
+
+.iconeDireita {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 3;
+}
+
 .trilha {
   position: absolute;
   top: 16px;

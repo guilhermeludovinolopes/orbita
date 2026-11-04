@@ -172,7 +172,7 @@ export default function MinhasViagens({ aoFechar, aoMudar }: Props) {
               {modoEdicao ? "Concluir" : "Editar"}
             </button>
             <button className={estilos.botao} onClick={aoFechar}>
-              Ver no globo
+              Fechar
             </button>
           </div>
         </div>
