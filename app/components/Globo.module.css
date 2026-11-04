@@ -195,8 +195,8 @@
 
 .trilha {
   position: absolute;
-  top: 16px;
-  left: 24px;
+  top: 84px; /* abaixo do símbolo e do nome do Órbita */
+  left: 20px;
   display: flex;
   align-items: center;
   gap: 14px;
