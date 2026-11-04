@@ -11,14 +11,13 @@ const CONTINENTES = ["América do Sul", "América do Norte e Central", "Europa",
 type Props = {
   visitados: Set<string>;
   aoEscolher: (codigo: string, nome: string) => void;
-  legenda: React.ReactNode;
-  antesDosPaises?: React.ReactNode; // seção no topo da lista (as 7 Maravilhas)
+  atracoes: React.ReactNode; // seção "Atrações" (as 7 Maravilhas, por enquanto)
   aberto: boolean; // abre pelo ícone de bandeira no canto direito do globo
   aoFechar: () => void;
 };
 
 // Coluna da direita, por cima do globo: todas as bandeiras do mundo, com as dos países visitados em destaque
-export default function PainelBandeiras({ visitados, aoEscolher, legenda, antesDosPaises, aberto, aoFechar }: Props) {
+export default function PainelBandeiras({ visitados, aoEscolher, atracoes, aberto, aoFechar }: Props) {
   const paises = paisesMundo as Pais[];
   const totalVisitados = paises.filter((p) => visitados.has(p.codigo)).length;
 
@@ -35,10 +34,9 @@ export default function PainelBandeiras({ visitados, aoEscolher, legenda, antesD
             ×
           </button>
         </header>
-        <div className={estilos.legenda}>{legenda}</div>
-
         <div className={estilos.lista}>
-          {antesDosPaises}
+          {/* Regiões fecham os continentes; Atrações vem embaixo */}
+          <GrupoRecolhivel titulo="Regiões" contador={`${totalVisitados} de ${paises.length}`} macro>
           {CONTINENTES.map((continente) => {
             // Visitados primeiro, depois em ordem alfabética
             const doContinente = paises
@@ -66,6 +64,8 @@ export default function PainelBandeiras({ visitados, aoEscolher, legenda, antesD
               </GrupoRecolhivel>
             );
           })}
+          </GrupoRecolhivel>
+          {atracoes}
         </div>
       </aside>
     </>

@@ -1,10 +1,10 @@
 .coluna {
   position: absolute;
-  top: 76px; /* abaixo do ícone de bandeira */
-  right: 16px;
+  top: 16px;
+  right: 76px; /* ao lado da coluna de ícones */
   z-index: 2;
   bottom: 16px;
-  width: 300px;
+  width: 330px;
   display: flex;
   flex-direction: column;
   background: rgba(0, 15, 12, 0.88); /* Tinta */
@@ -32,10 +32,6 @@
   color: var(--dourado);
 }
 
-.legenda {
-  padding: 0 20px 12px;
-  border-bottom: 1px solid rgba(245, 240, 232, 0.1);
-}
 
 .lista {
   flex: 1;

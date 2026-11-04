@@ -787,16 +787,35 @@ export default function Globo() {
       <div className={estilos.ceu} aria-hidden="true" /> {/* imagem do espaço, atrás do globo */}
       <div ref={recipiente} className={estilos.mapa} />
 
-      <div className={estilos.trilha}>
+      {/* Ícones à direita, um embaixo do outro: abrem os painéis, um de cada vez */}
+      <div className={estilos.trilhoIcones}>
         <button
           className={`${estilos.icone} ${viagensAbertas ? estilos.iconeAtivo : ""}`}
-          onClick={() => setViagensAbertas(!viagensAbertas)}
+          onClick={() => {
+            setViagensAbertas(!viagensAbertas);
+            setPaisesAbertos(false);
+          }}
           aria-label="Minhas viagens"
           aria-expanded={viagensAbertas}
           title="Minhas viagens"
         >
           <IconeViagens />
         </button>
+        <button
+          className={`${estilos.icone} ${paisesAbertos ? estilos.iconeAtivo : ""}`}
+          onClick={() => {
+            setPaisesAbertos(!paisesAbertos);
+            setViagensAbertas(false);
+          }}
+          aria-label="Países"
+          aria-expanded={paisesAbertos}
+          title="Países"
+        >
+          <IconePaises />
+        </button>
+      </div>
+
+      <div className={estilos.trilha}>
         {nivel.pais && (
           <nav className={estilos.niveis} aria-label="Onde você está no mapa">
             <button className={estilos.voltar} onClick={() => voltarRef.current()}>
@@ -813,30 +832,20 @@ export default function Globo() {
 
       {viagensAbertas && <MinhasViagens aoFechar={() => setViagensAbertas(false)} aoMudar={() => recarregarRef.current()} />}
 
-      <button
-        className={`${estilos.icone} ${estilos.iconeDireita} ${paisesAbertos ? estilos.iconeAtivo : ""}`}
-        onClick={() => setPaisesAbertos(!paisesAbertos)}
-        aria-label="Países"
-        aria-expanded={paisesAbertos}
-        title="Países"
-      >
-        <IconePaises />
-      </button>
-
       <PainelBandeiras
         aberto={paisesAbertos}
         aoFechar={() => setPaisesAbertos(false)}
-        antesDosPaises={<FaixaMaravilhas vistas={vistas} aoEscolher={(m) => irParaMaravilhaRef.current(m)} />}
+        atracoes={<FaixaMaravilhas vistas={vistas} aoEscolher={(m) => irParaMaravilhaRef.current(m)} />}
         visitados={visitados}
         aoEscolher={(codigo, nome) => irParaPaisRef.current(codigo, nome)}
-        legenda={
-          <ul className={estilos.legenda}>
-            <li><span style={{ background: COR.naoVisitado }} />Não visitado</li>
-            <li><span style={{ background: COR.visitado }} />Visitado</li>
-            <li><span style={{ background: COR.completo }} />Completo</li>
-          </ul>
-        }
       />
+
+      {/* Legenda das cores, sempre na imagem, no canto de baixo à esquerda */}
+      <ul className={estilos.legenda} aria-label="Legenda das cores">
+        <li><span style={{ background: COR.naoVisitado }} />Não visitado</li>
+        <li><span style={{ background: COR.visitado }} />Visitado</li>
+        <li><span style={{ background: COR.completo }} />Completo</li>
+      </ul>
 
       {selecionado && (
         <aside className={estilos.painel}>
