@@ -185,6 +185,7 @@ function detalhe({ visitas, lugares, primeiroAno, ultimoAno }: Resumo, folha?: b
 }
 
 function textoSituacao(s: Selecionado) {
+  if (s.situacao === "completo" && s.folha) return "Visitado — e a região em volta está completa";
   if (s.situacao === "completo") return `Completo — você visitou todos os ${s.nomeMunicipios ?? "lugares"}`;
   if (s.situacao === "visitado") return "Visitado";
   return "Ainda não visitado";
@@ -443,10 +444,11 @@ export default function Globo() {
     const dica = ([singular, , artigo]: readonly [string, string, string]) => `Clique em ${artigo} ${singular} para ver de perto.`;
 
     // Marca cada área com a situação (visitado/completo), a partir das visitas que caem nela
-    function marcar(features: GeoJSON.Feature[], visitasDe: (codigo: string) => Visita[], comTotal: boolean) {
+    // areaCompleta: os municípios de um estado ou condado completo também ficam dourados (100% daquele espaço)
+    function marcar(features: GeoJSON.Feature[], visitasDe: (codigo: string) => Visita[], comTotal: boolean, areaCompleta = false) {
       return features.map((f) => {
         const resumo = resumir(visitasDe(f.properties!.codigo));
-        const s = comTotal ? situacao(resumo, f.properties!.total) : situacao(resumo);
+        const s = areaCompleta && resumo ? "completo" : comTotal ? situacao(resumo, f.properties!.total) : situacao(resumo);
         return { ...f, properties: { ...f.properties, situacao: s ?? "" } };
       });
     }
@@ -537,7 +539,7 @@ export default function Globo() {
       if (estado) focarArea("estados", estado);
       if (comCondados) mostrarCamada("condados", marcar(geo.features, (c) => doEstado.filter((v) => v.condado === c), true));
       else {
-        mostrarCamada("municipios", marcar(geo.features, (c) => doEstado.filter((v) => v.municipio === c), false));
+        mostrarCamada("municipios", marcar(geo.features, (c) => doEstado.filter((v) => v.municipio === c), false, situacao(resumir(doEstado), total) === "completo"));
         municipiosAbertos = geo.features;
       }
       trazerParaFrente(); // contorno do estado por cima das divisas de dentro dele
@@ -571,7 +573,7 @@ export default function Globo() {
       const municipios = geo.features.filter((f) => f.properties?.condado === codigo);
       const condado = geoCondados.features.find((f) => f.properties?.codigo === codigo);
       if (condado) focarArea("condados", condado);
-      mostrarCamada("municipios", marcar(municipios, (c) => doCondado.filter((v) => v.municipio === c), false));
+      mostrarCamada("municipios", marcar(municipios, (c) => doCondado.filter((v) => v.municipio === c), false, situacao(resumir(doCondado), total) === "completo"));
       municipiosAbertos = municipios;
       trazerParaFrente();
       Object.assign(atual, { condado: codigo, nomeCondado: nome, totalCondado: total });
@@ -597,7 +599,12 @@ export default function Globo() {
     function mostrarMunicipio(codigo: string, nome: string) {
       const det = DETALHE_PAISES[atual.pais!];
       const resumo = resumir(visitas.filter((v) => v.pais === atual.pais && v.nivel1 === atual.estado && v.municipio === codigo));
-      setSelecionado({ tipo: det.nomes.municipio[0], codigo, nome, situacao: situacao(resumo), resumo, folha: true });
+      // Município de um estado (ou condado) completo: dourado como ele, igual ao mapa
+      const area = atual.condado
+        ? { visitas: visitas.filter((v) => v.pais === atual.pais && v.nivel1 === atual.estado && v.condado === atual.condado), total: atual.totalCondado }
+        : { visitas: visitas.filter((v) => v.pais === atual.pais && v.nivel1 === atual.estado), total: atual.totalEstado };
+      const completo = resumo && situacao(resumir(area.visitas), area.total) === "completo";
+      setSelecionado({ tipo: det.nomes.municipio[0], codigo, nome, situacao: completo ? "completo" : situacao(resumo), resumo, folha: true });
     }
 
     function mostrarPaisSemDetalhe(codigo: string, nome: string, onde: LngLat) {
