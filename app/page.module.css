@@ -1,5 +1,41 @@
 .tela {
+  position: relative;
   height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+/* Flutua sobre a imagem do espaço, sem faixa de fundo */
+.topo {
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none; /* não atrapalha arrastar o globo */
+}
+
+.simbolo {
+  width: 44px;
+  height: 44px;
+  /* Versão com fundo transparente (scripts/gerar-simbolo-transparente.mjs) */
+}
+
+.titulo {
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  text-shadow: 0 1px 6px rgba(0, 15, 12, 0.8);
+}
+
+.subtitulo {
+  font-family: var(--fonte-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dourado);
+  text-shadow: 0 1px 6px rgba(0, 15, 12, 0.8);
 }

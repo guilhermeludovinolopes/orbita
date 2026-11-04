@@ -2,7 +2,7 @@
 /* Abre por cima do globo, translúcido como a coluna de países, abaixo do ícone do diário */
 .tela {
   position: absolute;
-  top: 76px;
+  top: 144px;
   left: 16px;
   bottom: 16px;
   z-index: 4;
