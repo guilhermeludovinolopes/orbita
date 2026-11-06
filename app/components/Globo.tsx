@@ -102,6 +102,10 @@ function partePrincipal(f: GeoJSON.Feature): GeoJSON.Feature {
 }
 
 const CODIGO_NUMERICO_REINO_UNIDO = "826";
+// Países sem divisão interna: o país inteiro é um lugar só, então visitar já é completar (dourado)
+const PAISES_SEM_DIVISAO = new Set(["VA", "MC"]);
+const situacaoDoPais = (codigo: string, resumo: Resumo | null) =>
+  resumo && PAISES_SEM_DIVISAO.has(codigo) ? "completo" : situacao(resumo, DETALHE_PAISES[codigo]?.totalMunicipios);
 const TIPO_MARAVILHA = "maravilha do mundo";
 const LAT_MAX_MERCATOR = 85.0511287798;
 // Cantos do mundo inteiro em Web Mercator, para as imagens do mar e do relevo
@@ -162,13 +166,14 @@ const plural = (n: number, um: string, varios: string) => `${n.toLocaleString("p
 
 function detalhe({ visitas, lugares, primeiroAno, ultimoAno }: Resumo, folha?: boolean) {
   const partes = [plural(visitas, "visita", "visitas")];
-  if (!folha) partes.push(plural(lugares, "lugar", "lugares"));
+  if (!folha && lugares) partes.push(plural(lugares, "lugar", "lugares")); // "0 lugares" não diz nada (visita só de país ou estado)
   if (primeiroAno) partes.push(primeiroAno === ultimoAno ? `${primeiroAno}` : `${primeiroAno}–${ultimoAno}`);
   return partes.join(" · ");
 }
 
 function textoSituacao(s: Selecionado) {
   if (s.situacao === "completo" && s.folha) return "Visitado — e a região em volta está completa";
+  if (s.situacao === "completo" && !s.nomeMunicipios && s.tipo === "país" && !s.filhos) return "Completo";
   if (s.situacao === "completo") return `Completo — você visitou todos os ${s.nomeMunicipios ?? "lugares"}`;
   if (s.situacao === "visitado") return "Visitado";
   return "Ainda não visitado";
@@ -245,6 +250,8 @@ export default function Globo() {
     const contornos = import("world-atlas/countries-50m.json");
     // O Reino Unido aparece como 4 nações (ver scripts/extrair-nacoes-reino-unido.mjs)
     const nacoesReinoUnido = buscarGeo("/geo/reino-unido.json");
+    // O Vaticano do mapa-múndi fica fora do lugar: vale o contorno do mapa de Roma (ver scripts/extrair-vaticano.mjs)
+    const vaticano = fetch("/geo/vaticano.json").then((r) => r.json() as Promise<GeoJSON.Polygon>).catch(() => null);
     // Se o banco falhar, o globo aparece todo como não visitado
     let visitas: Visita[] = [];
     const visitasCarregadas = carregarVisitas().catch((erro) => {
@@ -581,9 +588,13 @@ export default function Globo() {
       setSelecionado({ tipo: det.nomes.municipio[0], codigo, nome, situacao: completo ? "completo" : situacao(resumo), resumo, folha: true });
     }
 
+    // Países sem mapa por estados: os sem divisão interna ganham uma explicação, os outros o aviso de "em breve"
+    const detalheDoPais = (codigo: string) =>
+      PAISES_SEM_DIVISAO.has(codigo) ? { dica: "O país inteiro é um lugar só: visitou, completou." } : { semDetalhe: true };
+
     function mostrarPaisSemDetalhe(codigo: string, nome: string, onde: LngLat) {
       const resumo = resumir(visitas.filter((v) => v.pais === codigo));
-      setSelecionado({ tipo: "país", codigo, nome, situacao: situacao(resumo), resumo, semDetalhe: true });
+      setSelecionado({ tipo: "país", codigo, nome, situacao: situacaoDoPais(codigo, resumo), resumo, ...detalheDoPais(codigo) });
       mapa.flyTo({ center: onde, zoom: Math.max(mapa.getZoom(), 2.6), duration: 1200 });
     }
 
@@ -602,9 +613,10 @@ export default function Globo() {
       if (DETALHE_PAISES[codigo] && contornosPaises.length) return void entrarNoPais(codigo, nome);
       mostrarMundo();
       const resumo = resumir(visitas.filter((v) => v.pais === codigo));
-      setSelecionado({ tipo: "país", codigo, nome, situacao: situacao(resumo), resumo, semDetalhe: true });
+      setSelecionado({ tipo: "país", codigo, nome, situacao: situacaoDoPais(codigo, resumo), resumo, ...detalheDoPais(codigo) });
       const contorno = contornosPaises.find((f) => f.properties?.codigo === codigo);
-      if (contorno) mapa.fitBounds(limitesDe([partePrincipal(contorno)]), { padding, maxZoom: 5, duration: 1400 });
+      // Sem limite baixo de zoom: o Vaticano e Mônaco precisam de zoom de bairro para aparecer
+      if (contorno) mapa.fitBounds(limitesDe([partePrincipal(contorno)]), { padding, maxZoom: 12, duration: 1400 });
     };
 
     voltarRef.current = () => {
@@ -625,7 +637,7 @@ export default function Globo() {
       for (const f of contornosPaises) {
         const codigo = f.properties!.codigo;
         const resumo = resumir(visitas.filter((v) => v.pais === codigo));
-        f.properties!.situacao = situacao(resumo, DETALHE_PAISES[codigo]?.totalMunicipios) ?? "";
+        f.properties!.situacao = situacaoDoPais(codigo, resumo) ?? "";
       }
     }
 
@@ -647,6 +659,19 @@ export default function Globo() {
       const topo = (await contornos).default as unknown as Topology;
       const colecao = feature(topo, topo.objects.countries) as GeoJSON.FeatureCollection;
       colecao.features = colecao.features.filter((f) => String(f.id) !== CODIGO_NUMERICO_REINO_UNIDO);
+      const contornoVaticano = await vaticano;
+      const featVaticano = colecao.features.find((f) => String(f.id) === "336");
+      const featItalia = colecao.features.find((f) => String(f.id) === "380");
+      if (contornoVaticano && featVaticano && featItalia) {
+        // A Itália do mapa-múndi tem um buraco no Vaticano antigo: fecha esse buraco (fica só o de San Marino)
+        const antigo = JSON.stringify((featVaticano.geometry as GeoJSON.Polygon).coordinates[0]);
+        const italia = featItalia.geometry as GeoJSON.Polygon | GeoJSON.MultiPolygon;
+        const semBuraco = (p: GeoJSON.Position[][]) => p.filter((anel, i) => i === 0 || JSON.stringify([...anel].reverse()) !== antigo && JSON.stringify(anel) !== antigo);
+        italia.coordinates = italia.type === "Polygon" ? semBuraco(italia.coordinates) : italia.coordinates.map(semBuraco);
+        featVaticano.geometry = contornoVaticano;
+        // Por último na lista, para ser pintado por cima da Itália
+        colecao.features = [...colecao.features.filter((f) => f !== featVaticano), featVaticano];
+      }
       colecao.features.forEach(costurarLinhaDeData);
       for (const f of colecao.features) {
         const codigo = f.id ? paises.numericToAlpha2(String(f.id)) : undefined;
